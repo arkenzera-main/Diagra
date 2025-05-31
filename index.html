@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagrama de Caso de Uso Interativo: Controlar Vendas - Maluma Shoes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .actor {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .actor:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .use-case, .use-case-small {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .use-case:hover, .use-case-small:hover {
+            transform: scale(1.05);
+        }
+        .line-label {
+            font-size: 10px;
+            fill: #374151;
+            font-family: sans-serif;
+            pointer-events: none;
+        }
+        .highlight {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #1F2937;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 200px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans p-4 md:p-8">
+
+  <div class="max-w-7xl mx-auto bg-white shadow-xl rounded-lg p-6 md:p-10">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold text-indigo-700">
+        Diagrama de Caso de Uso: Controlar Vendas - Maluma Shoes
+      </h1>
+      <div class="flex space-x-2">
+        <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm">
+          <i class="fas fa-sync-alt mr-1"></i> Reiniciar
+        </button>
+        <button id="helpBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+          <i class="fas fa-question-circle mr-1"></i> Ajuda
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg hidden" id="helpPanel">
+      <h3 class="font-bold text-blue-800 mb-2">Como usar:</h3>
+      <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+        <li>Clique nos atores ou casos de uso para destacar as conexões</li>
+        <li>Passe o mouse sobre os elementos para ver informações detalhadas</li>
+        <li>Use o botão "Reiniciar" para limpar a seleção</li>
+      </ul>
+    </div>
+
+    <div id="diagramArea" class="relative grid grid-cols-[1fr_auto_1fr] gap-x-4 md:gap-x-8 items-start" style="min-height: 1000px;">
+
+      <!-- Coluna do Cliente -->
+      <div class="actor-column flex flex-col items-center pt-32 md:pt-48 space-y-4">
+        <div id="cliente" class="actor bg-sky-500 text-white p-3 rounded-lg shadow-md text-center w-32 md:w-40 flex flex-col items-center justify-center" 
+             data-tooltip="O cliente interage com o sistema para realizar compras e solicitar informações">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 mx-auto mb-1" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+          </svg>
+          <span class="text-sm md:text-base">Cliente</span>
+        </div>
+      </div>
+
+      <!-- Coluna Central - Casos de Uso -->
+      <div class="use-cases-main-column flex flex-col items-center space-y-3 py-8">
+        <div class="system-boundary-label text-center font-semibold text-gray-700 mb-4 text-lg px-4 py-2 bg-indigo-50 rounded-lg">
+          Sistema: Controlar Vendas
+        </div>
+
+        <!-- Casos de Uso do Cliente -->
+        <div class="flex flex-col items-center space-y-3 mb-6">
+          <div id="selecionarProdutos" class="use-case bg-green-200 border border-green-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="O cliente seleciona os produtos que deseja comprar">
+            <i class="fas fa-shopping-basket mr-2"></i>Selecionar Produtos
+          </div>
+          <div id="solicitarInfoProduto" class="use-case bg-green-200 border border-green-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="O cliente solicita informações sobre produtos específicos">
+            <i class="fas fa-info-circle mr-2"></i>Solicitar Informações
+          </div>
+          <div id="realizarPagamento" class="use-case bg-green-200 border border-green-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="O cliente realiza o pagamento pelos produtos selecionados">
+            <i class="fas fa-credit-card mr-2"></i>Realizar Pagamento
+          </div>
+          <div id="receberComprovante" class="use-case bg-green-200 border border-green-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="O cliente recebe o comprovante da venda">
+            <i class="fas fa-receipt mr-2"></i>Receber Comprovante
+          </div>
+          <div id="solicitarTroca" class="use-case bg-green-200 border border-green-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm mb-6"
+               data-tooltip="O cliente solicita troca ou devolução de produtos">
+            <i class="fas fa-exchange-alt mr-2"></i>Solicitar Troca/Devolução
+          </div>
+        </div>
+
+        <!-- Casos de Uso do Vendedor - Processo Principal -->
+        <div id="lancarVenda" class="use-case bg-indigo-200 border border-indigo-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+             data-tooltip="O vendedor registra a venda no sistema">
+          <i class="fas fa-cash-register mr-2"></i>Lançar Venda
+        </div>
+        <div class="pl-6 md:pl-8 space-y-1 my-1">
+            <div id="atualizarEstoqueSaida" class="use-case-small bg-indigo-100 border border-indigo-300 p-2 rounded-full text-center min-w-[160px] md:min-w-[180px] max-w-xs text-xs"
+                 data-tooltip="Atualiza o estoque após a saída de produtos">
+              <i class="fas fa-box-open mr-1"></i>Atualizar Estoque (Saída)
+            </div>
+            <div id="calcularTotalVenda" class="use-case-small bg-indigo-100 border border-indigo-300 p-2 rounded-full text-center min-w-[160px] md:min-w-[180px] max-w-xs text-xs"
+                 data-tooltip="Calcula o valor total da venda">
+              <i class="fas fa-calculator mr-1"></i>Calcular Total
+            </div>
+            <div id="cadastrarCliente" class="use-case-small bg-indigo-100 border border-indigo-300 p-2 rounded-full text-center min-w-[160px] md:min-w-[180px] max-w-xs text-xs"
+                 data-tooltip="Cadastra novo cliente no sistema (opcional)">
+              <i class="fas fa-user-plus mr-1"></i>Cadastrar Cliente
+            </div>
+            <div id="aplicarDesconto" class="use-case-small bg-indigo-100 border border-indigo-300 p-2 rounded-full text-center min-w-[160px] md:min-w-[180px] max-w-xs text-xs mb-2"
+                 data-tooltip="Aplica desconto na venda (se aplicável)">
+              <i class="fas fa-tag mr-1"></i>Aplicar Desconto
+            </div>
+        </div>
+
+        <div id="consultarProduto" class="use-case bg-indigo-200 border border-indigo-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+             data-tooltip="Consulta informações sobre produtos no sistema">
+          <i class="fas fa-search mr-2"></i>Consultar Produto
+        </div>
+        <div id="processarPagamento" class="use-case bg-indigo-200 border border-indigo-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+             data-tooltip="Processa o pagamento realizado pelo cliente">
+          <i class="fas fa-money-bill-wave mr-2"></i>Processar Pagamento
+        </div>
+        <div id="emitirComprovante" class="use-case bg-indigo-200 border border-indigo-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+             data-tooltip="Emite o comprovante de venda para o cliente">
+          <i class="fas fa-print mr-2"></i>Emitir Comprovante
+        </div>
+
+        <div id="gerenciarTroca" class="use-case bg-indigo-200 border border-indigo-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm mt-4"
+             data-tooltip="Gerencia o processo de troca ou devolução">
+          <i class="fas fa-retweet mr-2"></i>Gerenciar Troca/Devolução
+        </div>
+        <div class="pl-6 md:pl-8 space-y-1 my-1">
+            <div id="atualizarEstoqueEntrada" class="use-case-small bg-indigo-100 border border-indigo-300 p-2 rounded-full text-center min-w-[160px] md:min-w-[180px] max-w-xs text-xs mb-2"
+                 data-tooltip="Atualiza o estoque após entrada de produtos devolvidos">
+              <i class="fas fa-undo mr-1"></i>Atualizar Estoque (Entrada)
+            </div>
+        </div>
+
+        <!-- Relatórios -->
+        <div class="flex flex-col items-center space-y-3 mt-6">
+          <div id="consultarHistoricoVendas" class="use-case bg-purple-200 border border-purple-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="Consulta o histórico geral de vendas">
+            <i class="fas fa-history mr-2"></i>Histórico de Vendas
+          </div>
+          <div id="consultarProdutosMaisVendidos" class="use-case bg-purple-200 border border-purple-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="Consulta os produtos mais vendidos">
+            <i class="fas fa-star mr-2"></i>Produtos Mais Vendidos
+          </div>
+          <div id="consultarHistoricoCliente" class="use-case bg-purple-200 border border-purple-400 p-3 rounded-full text-center min-w-[180px] md:min-w-[200px] max-w-xs text-xs md:text-sm"
+               data-tooltip="Consulta o histórico de compras de um cliente específico">
+            <i class="fas fa-user-clock mr-2"></i>Histórico por Cliente
+          </div>
+        </div>
+      </div>
+
+      <!-- Coluna do Vendedor -->
+      <div class="actor-column flex flex-col items-center pt-32 md:pt-48 space-y-4">
+        <div id="vendedor" class="actor bg-rose-500 text-white p-3 rounded-lg shadow-md text-center w-32 md:w-40 flex flex-col items-center justify-center"
+             data-tooltip="O vendedor opera o sistema para registrar vendas e gerenciar informações">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 mx-auto mb-1" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+          </svg>
+          <span class="text-sm md:text-base">Vendedor</span>
+        </div>
+      </div>
+
+      <svg id="svgLines" class="absolute top-0 left-0 w-full h-full pointer-events-none z-0"></svg>
+      <div id="tooltip" class="tooltip"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const svg = document.getElementById('svgLines');
+      const diagramArea = document.getElementById('diagramArea');
+      const tooltip = document.getElementById('tooltip');
+      const helpPanel = document.getElementById('helpPanel');
+      const helpBtn = document.getElementById('helpBtn');
+      const resetBtn = document.getElementById('resetBtn');
+
+      // Configurações do diagrama
+      const colors = {
+        association: '#6B7280',
+        include: '#4B5563',
+        extend: '#4B5563',
+        highlight: '#6366F1'
+      };
+
+      // Conexões do diagrama
+      const connections = [
+        // Conexões do Cliente (associações)
+        { source: 'cliente', target: 'selecionarProdutos', type: 'association' },
+        { source: 'cliente', target: 'solicitarInfoProduto', type: 'association' },
+        { source: 'cliente', target: 'realizarPagamento', type: 'association' },
+        { source: 'cliente', target: 'receberComprovante', type: 'association' },
+        { source: 'cliente', target: 'solicitarTroca', type: 'association' },
+
+        // Conexões do Vendedor (associações)
+        { source: 'vendedor', target: 'lancarVenda', type: 'association' },
+        { source: 'vendedor', target: 'consultarProduto', type: 'association' },
+        { source: 'vendedor', target: 'processarPagamento', type: 'association' },
+        { source: 'vendedor', target: 'emitirComprovante', type: 'association' },
+        { source: 'vendedor', target: 'gerenciarTroca', type: 'association' },
+        { source: 'vendedor', target: 'consultarHistoricoVendas', type: 'association' },
+        { source: 'vendedor', target: 'consultarProdutosMaisVendidos', type: 'association' },
+        { source: 'vendedor', target: 'consultarHistoricoCliente', type: 'association' },
+
+        // Relações entre Casos de Uso (include e extend)
+        { source: 'lancarVenda', target: 'atualizarEstoqueSaida', type: 'include', label: '<<inclui>>' },
+        { source: 'lancarVenda', target: 'calcularTotalVenda', type: 'include', label: '<<inclui>>' },
+        { source: 'cadastrarCliente', target: 'lancarVenda', type: 'extend', label: '<<estende>>' },
+        { source: 'aplicarDesconto', target: 'lancarVenda', type: 'extend', label: '<<estende>>' },
+        { source: 'gerenciarTroca', target: 'atualizarEstoqueEntrada', type: 'include', label: '<<inclui>>' },
+        
+        // Relações entre casos de uso do cliente e do sistema
+        { source: 'selecionarProdutos', target: 'lancarVenda', type: 'association' },
+        { source: 'solicitarInfoProduto', target: 'consultarProduto', type: 'association' },
+        { source: 'realizarPagamento', target: 'processarPagamento', type: 'association' },
+        { source: 'receberComprovante', target: 'emitirComprovante', type: 'association' },
+        { source: 'solicitarTroca', target: 'gerenciarTroca', type: 'association' }
+      ];
+
+      // Adiciona marcadores de seta ao SVG
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = `
+        <marker id="arrow-include" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="${colors.include}"></path>
+        </marker>
+        <marker id="arrow-extend" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="${colors.extend}"></path>
+        </marker>
+      `;
+      svg.appendChild(defs);
+
+      // Função para obter o centro de um elemento
+      function getElementCenter(elementId, relativeTo) {
+        const el = document.getElementById(elementId);
+        if (!el) return null;
+        
+        const elRect = el.getBoundingClientRect();
+        const relativeRect = relativeTo.getBoundingClientRect();
+        
+        return {
+          x: elRect.left + elRect.width / 2 - relativeRect.left,
+          y: elRect.top + elRect.height / 2 - relativeRect.top,
+          width: elRect.width,
+          height: elRect.height
+        };
+      }
+
+      // Função para encontrar o ponto de interseção na borda de um retângulo
+      function getRectIntersectionPoint(cx, cy, width, height, angle) {
+        const dx = Math.cos(angle);
+        const dy = Math.sin(angle);
+        
+        const halfWidth = width / 2;
+        const halfHeight = height / 2;
+        
+        let tx = Infinity, ty = Infinity;
+        
+        if (Math.abs(dx) > 0.0001) {
+          tx = (dx > 0 ? halfWidth : -halfWidth) / dx;
+        }
+        
+        if (Math.abs(dy) > 0.0001) {
+          ty = (dy > 0 ? halfHeight : -halfHeight) / dy;
+        }
+        
+        const t = Math.min(tx, ty);
+        
+        return {
+          x: cx + t * dx,
+          y: cy + t * dy
+        };
+      }
+
+      // Desenha uma linha entre dois elementos
+      function drawLine(connection) {
+        const { source, target, type, label } = connection;
+        const sourcePos = getElementCenter(source, diagramArea);
+        const targetPos = getElementCenter(target, diagramArea);
+
+        if (!sourcePos || !targetPos) return;
+
+        const angle = Math.atan2(targetPos.y - sourcePos.y, targetPos.x - sourcePos.x);
+        const reverseAngle = Math.atan2(sourcePos.y - targetPos.y, sourcePos.x - targetPos.x);
+
+        const p1 = getRectIntersectionPoint(sourcePos.x, sourcePos.y, sourcePos.width, sourcePos.height, angle);
+        const p2 = getRectIntersectionPoint(targetPos.x, targetPos.y, targetPos.width, targetPos.height, reverseAngle);
+
+        // Cria a linha
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', p1.x);
+        line.setAttribute('y1', p1.y);
+        line.setAttribute('x2', p2.x);
+        line.setAttribute('y2', p2.y);
+        line.setAttribute('class', `connection-line ${source}-${target}`);
+        line.setAttribute('data-source', source);
+        line.setAttribute('data-target', target);
+        
+        let strokeColor = colors.association;
+        let strokeDashArray = '';
+        let markerEnd = '';
+
+        if (type === 'include') {
+          strokeColor = colors.include;
+          strokeDashArray = '5,5';
+          markerEnd = 'url(#arrow-include)';
+        } else if (type === 'extend') {
+          strokeColor = colors.extend;
+          strokeDashArray = '5,5';
+          markerEnd = 'url(#arrow-extend)';
+        }
+
+        line.setAttribute('stroke', strokeColor);
+        line.setAttribute('stroke-width', '1.5');
+        if (strokeDashArray) line.setAttribute('stroke-dasharray', strokeDashArray);
+        if (markerEnd) line.setAttribute('marker-end', markerEnd);
+        
+        svg.appendChild(line);
+
+        // Adiciona rótulo se existir
+        if (label) {
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          let textX = (p1.x + p2.x) / 2;
+          let textY = (p1.y + p2.y) / 2;
+          const offsetX = type === 'extend' ? (p1.x < p2.x ? -15 : 15) : (type === 'include' ? (p1.x < p2.x ? 10 : -10) : 0);
+          const offsetY = -5; 
+
+          text.setAttribute('x', textX + offsetX);
+          text.setAttribute('y', textY + offsetY);
+          text.setAttribute('class', 'line-label');
+          text.setAttribute('text-anchor', 'middle');
+          text.textContent = label;
+          svg.appendChild(text);
+        }
+      }
+
+      // Desenha todas as conexões
+      function drawAllConnections() {
+        connections.forEach(conn => {
+          drawLine(conn);
+        });
+      }
+
+      // Destaca elementos conectados
+      function highlightConnectedElements(elementId) {
+        // Remove destaques anteriores
+        document.querySelectorAll('.highlight').forEach(el => {
+          el.classList.remove('highlight');
+        });
+        
+        // Destaca o elemento clicado
+        const clickedElement = document.getElementById(elementId);
+        if (clickedElement) {
+          clickedElement.classList.add('highlight');
+        }
+
+        // Encontra todas as conexões relacionadas ao elemento
+        const relatedConnections = connections.filter(conn => 
+          conn.source === elementId || conn.target === elementId
+        );
+
+        // Destaca os elementos conectados
+        relatedConnections.forEach(conn => {
+          const otherElementId = conn.source === elementId ? conn.target : conn.source;
+          const otherElement = document.getElementById(otherElementId);
+          if (otherElement) {
+            otherElement.classList.add('highlight');
+          }
+          
+          // Destaca as linhas de conexão
+          const lineSelector = `.${conn.source}-${conn.target}, .${conn.target}-${conn.source}`;
+          document.querySelectorAll(lineSelector).forEach(line => {
+            line.setAttribute('stroke', colors.highlight);
+            line.setAttribute('stroke-width', '2.5');
+          });
+        });
+      }
+
+      // Reinicia o diagrama
+      function resetDiagram() {
+        // Remove destaques
+        document.querySelectorAll('.highlight').forEach(el => {
+          el.classList.remove('highlight');
+        });
+        
+        // Redefine as linhas
+        document.querySelectorAll('.connection-line').forEach(line => {
+          const type = line.getAttribute('marker-end') ? 
+                       (line.getAttribute('marker-end').includes('include') ? 'include' : 'extend') : 
+                       'association';
+          line.setAttribute('stroke', colors[type]);
+          line.setAttribute('stroke-width', '1.5');
+        });
+      }
+
+      // Configura tooltips
+      function setupTooltips() {
+        const elementsWithTooltip = document.querySelectorAll('[data-tooltip]');
+        
+        elementsWithTooltip.forEach(el => {
+          el.addEventListener('mouseenter', (e) => {
+            const tooltipText = el.getAttribute('data-tooltip');
+            tooltip.textContent = tooltipText;
+            tooltip.style.opacity = '1';
+            
+            const rect = el.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + rect.width/2 - tooltip.offsetWidth/2}px`;
+            tooltip.style.top = `${rect.top - tooltip.offsetHeight - 10}px`;
+          });
+          
+          el.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = '0';
+          });
+        });
+      }
+
+      // Configura interatividade
+      function setupInteractivity() {
+        // Clique nos elementos
+        const interactiveElements = document.querySelectorAll('.actor, .use-case, .use-case-small');
+        interactiveElements.forEach(el => {
+          el.addEventListener('click', () => {
+            highlightConnectedElements(el.id);
+          });
+        });
+
+        // Botão de ajuda
+        helpBtn.addEventListener('click', () => {
+          helpPanel.classList.toggle('hidden');
+        });
+
+        // Botão de reiniciar
+        resetBtn.addEventListener('click', resetDiagram);
+      }
+
+      // Redesenha o diagrama quando a janela é redimensionada
+      function setupResizeHandler() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            // Remove todas as linhas exceto os marcadores
+            while (svg.firstChild && svg.firstChild !== defs) {
+              svg.removeChild(svg.firstChild);
+            }
+            
+            // Redesenha as conexões
+            drawAllConnections();
+          }, 250);
+        });
+      }
+
+      // Inicializa o diagrama
+      function initDiagram() {
+        drawAllConnections();
+        setupTooltips();
+        setupInteractivity();
+        setupResizeHandler();
+      }
+
+      initDiagram();
+    });
+  </script>
+
+</body>
+</html>
