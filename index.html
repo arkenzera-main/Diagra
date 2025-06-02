@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,28 +10,57 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
+        :root {
+            --bg-primary: #f9fafb;
+            --bg-secondary: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #e5e7eb;
+            --grid-color: #e5e7eb;
+            --selection-color: rgba(59, 130, 246, 0.3);
+            --workspace-bg: #f9fafb;
+        }
+
+        .dark {
+            --bg-primary: #1f2937;
+            --bg-secondary: #111827;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --border-color: #374151;
+            --grid-color: #374151;
+            --selection-color: rgba(59, 130, 246, 0.5);
+            --workspace-bg: #1f2937;
+        }
+
         body {
             margin: 0;
             padding: 0;
             overflow: hidden;
             height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
         }
+
         .grid-bg {
-            background-color: #f9fafb;
-            background-image: linear-gradient(#e5e7eb 1px, transparent 1px),
-                              linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+            background-color: var(--workspace-bg);
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
             background-size: 20px 20px;
         }
+
         #diagramArea {
             position: relative;
             width: 100%;
-            height: calc(100vh - 200px);
+            height: 100%;
             overflow: hidden;
             transform-origin: 0 0;
             transition: transform 0.1s ease;
         }
-        .actor, .use-case {
+
+        .actor,
+        .use-case {
             transition: all 0.2s ease;
             cursor: move;
             user-select: none;
@@ -42,6 +72,7 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 10;
         }
+
         .actor {
             background-color: #7dd3fc;
             border: 2px solid #0ea5e9;
@@ -50,6 +81,7 @@
             min-width: 150px;
             min-height: 80px;
         }
+
         .use-case {
             background-color: #86efac;
             border: 2px solid #22c55e;
@@ -58,81 +90,114 @@
             width: 180px;
             height: 90px;
         }
+
         .connection-point {
             position: absolute;
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background-color: #6b7280;
+            background-color: var(--text-secondary);
             z-index: 20;
             cursor: pointer;
             transition: all 0.2s ease;
         }
+
         .connection-point:hover {
             background-color: #3b82f6;
             transform: scale(1.5);
         }
+
         .connection-point-highlight {
             background-color: #3b82f6;
             transform: scale(1.3);
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
         }
+
         .connection-label {
             font-size: 10px;
             font-weight: bold;
-            fill: #374151;
+            fill: var(--text-primary);
             font-family: sans-serif;
             pointer-events: none;
             user-select: none;
-            background-color: rgba(255, 255, 255, 0.7);
+            background-color: rgba(var(--bg-secondary), 0.7);
             padding: 2px 5px;
             border-radius: 3px;
+            cursor: move;
         }
+
         .highlight {
             animation: pulse 1.5s infinite;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
         }
+
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-            70% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+            }
         }
+
         .dragging {
             opacity: 0.7;
             z-index: 100;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
         }
+
         .connector-line {
-            stroke: #4b5563;
+            stroke: var(--text-secondary);
             stroke-width: 2;
             fill: none;
         }
+
         .connector-line.association {
-            stroke: #6b7280;
+            stroke: var(--text-secondary);
         }
+
         .connector-line.include {
             stroke: #8b5cf6;
             stroke-dasharray: 5, 5;
         }
+
         .connector-line.extend {
             stroke: #ec4899;
             stroke-dasharray: 5, 5;
         }
-        .arrowhead {
-            fill: #4b5563;
+
+        .connector-line.dashed {
+            stroke-dasharray: 5, 5;
         }
+
+        .connector-line.dotted {
+            stroke-dasharray: 2, 2;
+        }
+
+        .arrowhead {
+            fill: var(--text-secondary);
+        }
+
         .arrowhead.include {
             fill: #8b5cf6;
         }
+
         .arrowhead.extend {
             fill: #ec4899;
         }
+
         .dragging-connection-arrow {
             stroke: #3b82f6;
             stroke-width: 2;
             fill: none;
             marker-end: url(#dragging-arrow);
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -145,23 +210,26 @@
             align-items: center;
             justify-content: center;
         }
+
         .modal-content {
-            background-color: white;
+            background-color: var(--bg-secondary);
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             max-width: 500px;
             width: 90%;
         }
+
         .context-menu {
             display: none;
             position: absolute;
-            background: white;
-            border: 1px solid #e5e7eb;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
+
         .context-menu-item {
             padding: 8px 12px;
             cursor: pointer;
@@ -169,16 +237,19 @@
             display: flex;
             align-items: center;
         }
+
         .context-menu-item:hover {
-            background-color: #f3f4f6;
+            background-color: rgba(0, 0, 0, 0.1);
         }
+
         .toolbar-section {
-            background-color: #f9fafb;
+            background-color: var(--bg-secondary);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 10px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+
         .toolbar-button {
             display: flex;
             align-items: center;
@@ -189,13 +260,16 @@
             margin-bottom: 4px;
             transition: all 0.2s ease;
         }
+
         .toolbar-button:hover {
-            background-color: #e5e7eb;
+            background-color: rgba(0, 0, 0, 0.1);
         }
+
         .toolbar-button.active {
-            background-color: #dbeafe;
+            background-color: rgba(59, 130, 246, 0.2);
             color: #3b82f6;
         }
+
         #svgCanvas {
             position: absolute;
             top: 0;
@@ -204,11 +278,12 @@
             height: 100%;
             z-index: 5;
         }
+
         #elementEditor {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 15px;
@@ -216,71 +291,92 @@
             z-index: 100;
             transition: all 0.3s ease;
         }
+
         .selected-element {
             box-shadow: 0 0 0 3px #3b82f6;
         }
+
         .selected-connection {
             stroke-width: 3px !important;
             filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.7));
         }
+
         .editor-hidden {
             transform: translateX(300px);
             opacity: 0;
             pointer-events: none;
         }
+
         .drag-info-box {
             position: absolute;
-            background-color: rgba(255, 255, 255, 0.9);
-            border: 1px solid #e5e7eb;
+            background-color: rgba(var(--bg-secondary), 0.9);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 5px 10px;
             font-size: 12px;
             pointer-events: none;
             z-index: 100;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
+
         .color-preview {
             width: 20px;
             height: 20px;
             border-radius: 4px;
             display: inline-block;
             margin-right: 8px;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-color);
             cursor: pointer;
         }
+
         #elementConnections {
             margin-top: 20px;
             padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid var(--border-color);
         }
+
         .connection-item {
             padding: 8px;
-            background-color: #f9fafb;
+            background-color: var(--bg-primary);
             border-radius: 4px;
             margin-bottom: 5px;
             cursor: pointer;
         }
+
         .connection-item:hover {
-            background-color: #e5e7eb;
+            background-color: rgba(0, 0, 0, 0.1);
         }
+
         .connection-item.selected {
-            background-color: #dbeafe;
+            background-color: rgba(59, 130, 246, 0.2);
             border-left: 3px solid #3b82f6;
         }
+
         .connection-form {
-            background-color: #f9fafb;
+            background-color: var(--bg-primary);
             padding: 10px;
             border-radius: 6px;
             margin-top: 10px;
         }
+
         .connection-candidate {
             animation: candidateGlow 1.5s infinite;
         }
+
         @keyframes candidateGlow {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
+
         .connection-status {
             position: fixed;
             top: 10px;
@@ -295,9 +391,118 @@
             transition: opacity 0.3s ease;
             z-index: 1000;
         }
+
+        .selection-box {
+            position: absolute;
+            background-color: var(--selection-color);
+            border: 1px solid #3b82f6;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .workspace-handle {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--bg-secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: move;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 30;
+        }
+
+        .grid-options {
+            position: absolute;
+            bottom: 60px;
+            right: 10px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 30;
+            display: none;
+        }
+
+        .grid-option {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .grid-option:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .grid-option.active {
+            background-color: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            #elementEditor {
+                width: 220px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .flex-col.md\:flex-row {
+                flex-direction: column;
+            }
+
+            .w-full.md\:w-64 {
+                width: 100%;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            #elementEditor {
+                width: 90%;
+                right: 5%;
+                top: auto;
+                bottom: 20px;
+            }
+
+            .editor-hidden {
+                transform: translateY(300px);
+            }
+
+            #diagramArea {
+                height: calc(100vh - 300px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #topBar .flex.space-x-2 {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            #topBar .flex.space-x-2 button {
+                margin: 2px;
+                padding: 4px 8px;
+                font-size: 12px;
+            }
+
+            .toolbar-button {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+
+            .toolbar-button i {
+                margin-right: 4px;
+            }
+        }
     </style>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -310,36 +515,56 @@
         }
     </script>
 </head>
-<body class="bg-gray-50">
+
+<body class="bg-gray-50 dark:bg-gray-900">
     <!-- Status de Conexão -->
-    <div id="connectionStatus" class="connection-status hidden">Modo Conexão: Clique em outro ponto para finalizar a conexão</div>
-    
+    <div id="connectionStatus" class="connection-status hidden">Modo Conexão: Clique em outro ponto para finalizar a
+        conexão</div>
+
     <!-- Top Navigation Bar -->
-    <div class="bg-white shadow">
+    <div id="topBar" class="bg-white dark:bg-gray-800 shadow">
         <div class="max-w-full mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%233b82f6' d='M12 3c-.8 0-1.5.3-2 .9c-.5.6-1.3 1.5-2 2.7c-.7 1.1-1.1 2.3-1.3 3.6c-.2 1.3-.1 2.5.1 3.7c.1.4.2 1.2.3 2.1c.1.9.2 2 .2 3.2v1.8h10V20c0-1.2.1-2.3.2-3.2c.1-.9.2-1.7.3-2.1c.2-1.2.2-2.4.1-3.7c-.1-1.3-.6-2.5-1.3-3.6c-.7-1.2-1.5-2.1-2-2.7c-.5-.6-1.2-.9-2-.9M7.5 20c-.8 0-1.5-.7-1.5-1.5S6.7 17 7.5 17S9 17.7 9 18.5S8.3 20 7.5 20m9 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5s1.5.7 1.5 1.5s-.7 1.5-1.5 1.5Z'/%3E%3C/svg%3E" 
-                     alt="Shoe Icon" class="w-8 h-8 mr-3">
-                <h1 class="text-xl md:text-2xl font-bold text-blue-600 flex items-center">
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%233b82f6' d='M12 3c-.8 0-1.5.3-2 .9c-.5.6-1.3 1.5-2 2.7c-.7 1.1-1.1 2.3-1.3 3.6c-.2 1.3-.1 2.5.1 3.7c.1.4.2 1.2.3 2.1c.1.9.2 2 .2 3.2v1.8h10V20c0-1.2.1-2.3.2-3.2c.1-.9.2-1.7.3-2.1c.2-1.2.2-2.4.1-3.7c-.1-1.3-.6-2.5-1.3-3.6c-.7-1.2-1.5-2.1-2-2.7c-.5-.6-1.2-.9-2-.9M7.5 20c-.8 0-1.5-.7-1.5-1.5S6.7 17 7.5 17S9 17.7 9 18.5S8.3 20 7.5 20m9 0c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5s1.5.7 1.5 1.5s-.7 1.5-1.5 1.5Z'/%3E%3C/svg%3E"
+                    alt="Shoe Icon" class="w-8 h-8 mr-3">
+                <h1 class="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400 flex items-center">
                     Editor de Diagrama de Caso de Uso
-                    <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">Maluma Shoes</span>
+                    <span
+                        class="text-sm bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full ml-2">Maluma
+                        Shoes</span>
                 </h1>
             </div>
             <div class="flex space-x-2">
-                <button id="saveBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                <button id="saveBtn"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm flex items-center">
                     <i class="fas fa-save mr-2"></i> Salvar
                 </button>
-                <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm flex items-center">
+                <button id="resetBtn"
+                    class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded text-sm flex items-center">
                     <i class="fas fa-sync-alt mr-2"></i> Reiniciar
                 </button>
-                <button id="exportBtn" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                <button id="exportBtn"
+                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm flex items-center">
                     <i class="fas fa-download mr-2"></i> Exportar
                 </button>
-                <button id="undoBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                <button id="undoBtn"
+                    class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm flex items-center">
                     <i class="fas fa-undo mr-2"></i> Desfazer
                 </button>
-                <button id="redoBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                <button id="redoBtn"
+                    class="bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1 rounded text-sm flex items-center">
                     <i class="fas fa-redo mr-2"></i> Refazer
+                </button>
+                <button id="helpBtn"
+                    class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                    <i class="fas fa-question-circle mr-2"></i> Ajuda
+                </button>
+                <button id="darkModeToggle"
+                    class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-3 py-1 rounded text-sm flex items-center">
+                    <i class="fas fa-moon mr-2 dark:hidden"></i>
+                    <i class="fas fa-sun mr-2 hidden dark:inline"></i>
+                    <span class="dark:hidden">Escuro</span>
+                    <span class="hidden dark:inline">Claro</span>
                 </button>
             </div>
         </div>
@@ -347,9 +572,10 @@
 
     <div class="flex flex-col md:flex-row h-full">
         <!-- Left Toolbar -->
-        <div class="w-full md:w-64 p-4 bg-white border-r border-gray-200 shadow-inner">
+        <div
+            class="w-full md:w-64 p-4 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-inner">
             <div class="toolbar-section">
-                <h2 class="text-sm font-semibold text-gray-700 mb-2">Novos Elementos</h2>
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Novos Elementos</h2>
                 <div class="space-y-1">
                     <button id="addActorBtn" class="toolbar-button">
                         <i class="fas fa-user-plus mr-2 text-blue-500"></i> Adicionar Ator
@@ -361,10 +587,10 @@
             </div>
 
             <div class="toolbar-section">
-                <h2 class="text-sm font-semibold text-gray-700 mb-2">Tipo de Conexão</h2>
-                <div class="space-y-1">
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tipo de Conexão</h2>
+                <div class="space-y-1" id="connectionTypeToolbar">
                     <button id="addAssociationBtn" class="toolbar-button active">
-                        <i class="fas fa-link mr-2 text-gray-600"></i> Associação
+                        <i class="fas fa-link mr-2 text-gray-600 dark:text-gray-400"></i> Associação
                     </button>
                     <button id="addIncludeBtn" class="toolbar-button">
                         <i class="fas fa-long-arrow-alt-right mr-2 text-purple-600"></i> Include
@@ -376,7 +602,22 @@
             </div>
 
             <div class="toolbar-section">
-                <h2 class="text-sm font-semibold text-gray-700 mb-2">Diagrama</h2>
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Estilo de Linha</h2>
+                <div class="space-y-1" id="lineStyleToolbar">
+                    <button id="solidLineBtn" class="toolbar-button active">
+                        <i class="fas fa-minus mr-2"></i> Sólida
+                    </button>
+                    <button id="dashedLineBtn" class="toolbar-button">
+                        <i class="fas fa-grip-lines mr-2"></i> Tracejada
+                    </button>
+                    <button id="dottedLineBtn" class="toolbar-button">
+                        <i class="fas fa-ellipsis-h mr-2"></i> Pontilhada
+                    </button>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
+                <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Diagrama</h2>
                 <div class="space-y-1">
                     <button id="gridToggle" class="toolbar-button">
                         <i class="fas fa-th mr-2"></i> Alternar Grade
@@ -395,34 +636,34 @@
         </div>
 
         <!-- Main Diagram Area -->
-        <div class="flex-1 flex flex-col">
-            <!-- Top Controls -->
-            <div class="bg-white border-b border-gray-200 p-3">
-                <div class="flex items-center space-x-4">
-                    <div>
-                        <span class="text-sm text-gray-600">Modo:</span>
-                        <span id="currentMode" class="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full ml-2">
-                            Selecionar (Shift + S)
-                        </span>
-                    </div>
-                    <div class="flex-1">
-                        <div class="relative max-w-md">
-                            <input type="text" placeholder="Pesquisar elemento..." 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                    <button id="helpBtn" class="bg-blue-50 text-blue-600 px-3 py-2 rounded-lg flex items-center text-sm">
-                        <i class="fas fa-question-circle mr-2"></i> Ajuda
-                    </button>
-                </div>
-            </div>
-
+        <div class="flex-1 flex flex-col relative">
             <!-- Diagram Container -->
             <div id="diagramContainer" class="flex-1 relative overflow-hidden">
                 <div id="diagramArea" class="grid-bg relative w-full h-full">
                     <svg id="svgCanvas"></svg>
                     <div id="dragInfoBox" class="drag-info-box hidden"></div>
+                    <div id="selectionBox" class="selection-box hidden"></div>
+                </div>
+
+                <!-- Workspace handle for moving the diagram -->
+                <div id="workspaceHandle" class="workspace-handle">
+                    <i class="fas fa-arrows-alt text-gray-600 dark:text-gray-300"></i>
+                </div>
+
+                <!-- Grid options menu -->
+                <div id="gridOptions" class="grid-options">
+                    <div class="grid-option active" data-size="20">
+                        <i class="fas fa-th mr-2"></i> Grade Padrão
+                    </div>
+                    <div class="grid-option" data-size="40">
+                        <i class="fas fa-th-large mr-2"></i> Grade Grande
+                    </div>
+                    <div class="grid-option" data-size="10">
+                        <i class="fas fa-th-list mr-2"></i> Grade Fina
+                    </div>
+                    <div class="grid-option" data-size="0">
+                        <i class="fas fa-eye-slash mr-2"></i> Sem Grade
+                    </div>
                 </div>
             </div>
         </div>
@@ -430,17 +671,17 @@
         <!-- Element Editor Sidebar -->
         <div id="elementEditor" class="editor-hidden">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-medium text-gray-800">Propriedades</h3>
-                <button id="closeEditorBtn" class="text-gray-500 hover:text-gray-700">
+                <h3 class="font-medium text-gray-800 dark:text-gray-200">Propriedades</h3>
+                <button id="closeEditorBtn" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div id="elementForm" class="space-y-4">
                 <!-- Form fields will be generated dynamically -->
             </div>
-            
+
             <div id="elementConnections">
-                <h3 class="text-sm font-medium text-gray-700 mb-2">Conexões</h3>
+                <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Conexões</h3>
                 <div id="connectionsList">
                     <!-- Connection list will be generated here -->
                 </div>
@@ -474,45 +715,48 @@
     <!-- Add Element Modal -->
     <div id="addElementModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-lg font-bold mb-4" id="modalTitle">Adicionar Elemento</h3>
+            <h3 class="text-lg font-bold mb-4 dark:text-gray-200" id="modalTitle">Adicionar Elemento</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                    <input type="text" id="elementName" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                    <input type="text" id="elementName"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
                 </div>
                 <div id="elementTypeContainer" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                    <select id="elementType" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                    <select id="elementType"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
                         <option value="actor">Ator</option>
                         <option value="use-case">Caso de Uso</option>
                     </select>
                 </div>
                 <div id="elementColorContainer">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cor</label>
                     <div class="flex space-x-2">
                         <div class="flex flex-col items-center">
                             <button data-color="7dd3fc" class="color-preview bg-[#7dd3fc]"></button>
-                            <span class="text-xs mt-1">Azul</span>
+                            <span class="text-xs mt-1 dark:text-gray-300">Azul</span>
                         </div>
                         <div class="flex flex-col items-center">
                             <button data-color="86efac" class="color-preview bg-[#86efac]"></button>
-                            <span class="text-xs mt-1">Verde</span>
+                            <span class="text-xs mt-1 dark:text-gray-300">Verde</span>
                         </div>
                         <div class="flex flex-col items-center">
                             <button data-color="fde68a" class="color-preview bg-[#fde68a]"></button>
-                            <span class="text-xs mt-1">Amarelo</span>
+                            <span class="text-xs mt-1 dark:text-gray-300">Amarelo</span>
                         </div>
                         <div class="flex flex-col items-center">
                             <button data-color="fecaca" class="color-preview bg-[#fecaca]"></button>
-                            <span class="text-xs mt-1">Vermelho</span>
+                            <span class="text-xs mt-1 dark:text-gray-300">Vermelho</span>
                         </div>
                     </div>
                     <input type="hidden" id="elementColor" value="7dd3fc">
                 </div>
                 <div class="flex justify-end space-x-2">
-                    <button id="cancelAddBtn" class="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">Cancelar</button>
-                    <button id="addElementConfirmBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    <button id="cancelAddBtn"
+                        class="px-4 py-2 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600">Cancelar</button>
+                    <button id="addElementConfirmBtn"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                         Adicionar
                     </button>
                 </div>
@@ -523,24 +767,37 @@
     <!-- Edit Connection Modal -->
     <div id="editConnectionModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-lg font-bold mb-4">Editar Conexão</h3>
+            <h3 class="text-lg font-bold mb-4 dark:text-gray-200">Editar Conexão</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                    <select id="connectionTypeSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                    <select id="connectionTypeSelect"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
                         <option value="association">Associação</option>
                         <option value="include">Include</option>
                         <option value="extend">Extend</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Rótulo</label>
-                    <input type="text" id="connectionLabel" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rótulo</label>
+                    <input type="text" id="connectionLabel"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estilo da
+                        Linha</label>
+                    <select id="connectionLineStyle"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+                        <option value="solid">Sólida</option>
+                        <option value="dashed">Tracejada</option>
+                        <option value="dotted">Pontilhada</option>
+                    </select>
                 </div>
                 <div class="flex justify-end space-x-2">
-                    <button id="cancelEditConnection" class="px-4 py-2 text-gray-600 rounded-md hover:bg-gray-100">Cancelar</button>
-                    <button id="saveConnectionBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                    <button id="cancelEditConnection"
+                        class="px-4 py-2 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600">Cancelar</button>
+                    <button id="saveConnectionBtn"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                         Salvar
                     </button>
                 </div>
@@ -551,13 +808,19 @@
     <!-- Export Modal -->
     <div id="exportModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-lg font-bold mb-4">Exportar Diagrama</h3>
+            <h3 class="text-lg font-bold mb-4 dark:text-gray-200">Exportar Diagrama</h3>
             <div class="space-y-4">
-                <button id="exportPNG" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex items-center justify-center">
+                <button id="exportPNG"
+                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded flex items-center justify-center">
                     <i class="fas fa-image mr-2"></i> Exportar como PNG
                 </button>
-                <button id="exportPDF" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded flex items-center justify-center">
+                <button id="exportPDF"
+                    class="w-full bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded flex items-center justify-center">
                     <i class="fas fa-file-pdf mr-2"></i> Exportar como PDF
+                </button>
+                <button id="exportSVG"
+                    class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded flex items-center justify-center">
+                    <i class="fas fa-code mr-2"></i> Exportar como SVG
                 </button>
                 <button id="cancelExport" class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded">
                     Cancelar
@@ -569,14 +832,22 @@
     <!-- Help Modal -->
     <div id="helpModal" class="modal">
         <div class="modal-content">
-            <h3 class="text-lg font-bold mb-4">Como usar o editor</h3>
-            <div class="space-y-3 text-gray-700">
-                <p><strong>Adicionar Elementos:</strong> Use os botões na barra lateral para adicionar atores ou casos de uso.</p>
+            <h3 class="text-lg font-bold mb-4 dark:text-gray-200">Como usar o editor</h3>
+            <div class="space-y-3 text-gray-700 dark:text-gray-300">
+                <p><strong>Adicionar Elementos:</strong> Use os botões na barra lateral para adicionar atores ou casos
+                    de uso.</p>
                 <p><strong>Mover Elementos:</strong> Clique e arraste para mover elementos no diagrama.</p>
-                <p><strong>Criar Conexões:</strong> Passe o mouse sobre os pontos de conexão para criar relações entre elementos. Clique em um ponto e arraste até outro elemento para criar a conexão.</p>
-                <p><strong>Editar Elementos:</strong> Clique com o botão direito em um elemento para abrir o menu de contexto.</p>
+                <p><strong>Seleção Múltipla:</strong> Mantenha Shift pressionado e clique nos elementos ou arraste uma
+                    caixa de seleção.</p>
+                <p><strong>Criar Conexões:</strong> Passe o mouse sobre os pontos de conexão para criar relações entre
+                    elementos. Clique em um ponto e arraste até outro elemento para criar a conexão.</p>
+                <p><strong>Mover Workspace:</strong> Use o ícone de alça no canto inferior direito para mover toda a
+                    área de trabalho.</p>
+                <p><strong>Editar Elementos:</strong> Clique com o botão direito em um elemento para abrir o menu de
+                    contexto.</p>
                 <p><strong>Propriedades:</strong> Clique em um elemento para abrir o painel de propriedades.</p>
-                <p><strong>Editar Conexões:</strong> Clique com o botão direito em uma conexão para editar ou excluir.</p>
+                <p><strong>Editar Conexões:</strong> Clique com o botão direito em uma conexão para editar ou excluir.
+                </p>
                 <p><strong>Salvar:</strong> O diagrama é salvo automaticamente no seu navegador.</p>
                 <div class="flex justify-end mt-4">
                     <button id="closeHelpBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
@@ -592,6 +863,7 @@
             const { jsPDF } = window.jspdf;
             const svg = document.getElementById('svgCanvas');
             const diagramArea = document.getElementById('diagramArea');
+            const diagramContainer = document.getElementById('diagramContainer');
             const contextMenu = document.getElementById('contextMenu');
             const connectionContextMenu = document.getElementById('connectionContextMenu');
             const connectionStatus = document.getElementById('connectionStatus');
@@ -603,7 +875,10 @@
             const elementForm = document.getElementById('elementForm');
             const connectionsList = document.getElementById('connectionsList');
             const dragInfoBox = document.getElementById('dragInfoBox');
-            
+            const selectionBox = document.getElementById('selectionBox');
+            const workspaceHandle = document.getElementById('workspaceHandle');
+            const gridOptions = document.getElementById('gridOptions');
+
             // Definir a seta de arraste
             const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
             const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
@@ -620,12 +895,12 @@
             marker.appendChild(path);
             defs.appendChild(marker);
             svg.appendChild(defs);
-            
+
             // State management
             let state = {
                 elements: [],
                 connections: [],
-                selectedElement: null,
+                selectedElements: [],
                 selectedConnection: null,
                 dragging: false,
                 connecting: false,
@@ -633,83 +908,105 @@
                 connectionSource: null,
                 scale: 1,
                 gridEnabled: true,
+                gridSize: 20,
                 editorVisible: false,
                 mode: 'select',
                 history: [],
-                historyIndex: -1
+                historyIndex: -1,
+                workspacePosition: { x: 0, y: 0 },
+                workspaceDragging: false,
+                workspaceDragStart: { x: 0, y: 0 },
+                selectionStart: null,
+                lineStyle: 'solid',
+                darkMode: false,
+                draggingLabel: false
             };
-            
+
             // Initialize the diagram
             function initDiagram() {
+                // Check for dark mode preference
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                    state.darkMode = true;
+                }
+
                 // Try to load saved state
                 loadState();
-                
+
                 // Render the diagram based on state
                 renderDiagram();
-                
+
                 // Setup event listeners
                 setupEventListeners();
             }
-            
+
             // Save state to localStorage
             function saveState() {
                 // Save to history for undo/redo
                 addToHistory();
-                
+
                 const diagramState = {
                     elements: state.elements,
                     connections: state.connections,
                     scale: state.scale,
-                    gridEnabled: state.gridEnabled
+                    gridEnabled: state.gridEnabled,
+                    gridSize: state.gridSize,
+                    workspacePosition: state.workspacePosition,
+                    darkMode: state.darkMode
                 };
                 localStorage.setItem('malumaShoesDiagram', JSON.stringify(diagramState));
                 console.log('Diagram state saved');
             }
-            
+
             // Add current state to history
             function addToHistory() {
                 // Truncate the history if we're not at the end
                 if (state.historyIndex < state.history.length - 1) {
                     state.history = state.history.slice(0, state.historyIndex + 1);
                 }
-                
+
                 const snapshot = {
                     elements: JSON.parse(JSON.stringify(state.elements)),
-                    connections: JSON.parse(JSON.stringify(state.connections))
+                    connections: JSON.parse(JSON.stringify(state.connections)),
+                    workspacePosition: JSON.parse(JSON.stringify(state.workspacePosition))
                 };
-                
+
                 state.history.push(snapshot);
                 state.historyIndex = state.history.length - 1;
             }
-            
+
             // Undo the last action
             function undo() {
                 if (state.historyIndex > 0) {
                     state.historyIndex--;
                     const snapshot = state.history[state.historyIndex];
-                    
+
                     state.elements = JSON.parse(JSON.stringify(snapshot.elements));
                     state.connections = JSON.parse(JSON.stringify(snapshot.connections));
-                    
+                    state.workspacePosition = JSON.parse(JSON.stringify(snapshot.workspacePosition));
+
                     renderDiagram();
                     updateConnectionsList();
+                    updateWorkspacePosition();
                 }
             }
-            
+
             // Redo the last undone action
             function redo() {
                 if (state.historyIndex < state.history.length - 1) {
                     state.historyIndex++;
                     const snapshot = state.history[state.historyIndex];
-                    
+
                     state.elements = JSON.parse(JSON.stringify(snapshot.elements));
                     state.connections = JSON.parse(JSON.stringify(snapshot.connections));
-                    
+                    state.workspacePosition = JSON.parse(JSON.stringify(snapshot.workspacePosition));
+
                     renderDiagram();
                     updateConnectionsList();
+                    updateWorkspacePosition();
                 }
             }
-            
+
             // Load state from localStorage
             function loadState() {
                 const savedState = localStorage.getItem('malumaShoesDiagram');
@@ -719,49 +1016,75 @@
                     state.connections = parsedState.connections || [];
                     state.scale = parsedState.scale || 1;
                     state.gridEnabled = parsedState.gridEnabled || true;
-                    
+                    state.gridSize = parsedState.gridSize || 20;
+                    state.workspacePosition = parsedState.workspacePosition || { x: 0, y: 0 };
+                    state.darkMode = parsedState.darkMode || false;
+
                     // Set zoom level
-                    diagramArea.style.transform = `scale(${state.scale})`;
-                    
+                    updateWorkspacePosition();
+
+                    // Set dark mode if needed
+                    if (state.darkMode) {
+                        document.documentElement.classList.add('dark');
+                    }
+
                     // Initialize history
                     addToHistory();
                 } else {
                     // Default elements
                     state.elements = [
-                        { id: 'cliente', type: 'actor', text: 'Cliente', position: { x: 100, y: 200 }, color: '#7dd3fc', 
-                          connectionPoints: ['bottom'], width: 150, height: 80 },
-                        { id: 'vendedor', type: 'actor', text: 'Vendedor', position: { x: 100, y: 450 }, color: '#fde68a', 
-                          connectionPoints: ['bottom'], width: 150, height: 80 },
-                        { id: 'sistema', type: 'label', text: 'Sistema: Controlar Vendas', position: { x: 500, y: 50 }, 
-                          width: 300, height: 40, color: '#dbeafe', fontSize: 18 },
-                        { id: 'selecionar', type: 'use-case', text: 'Selecionar Produtos', position: { x: 350, y: 150 }, 
-                          color: '#86efac', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90 },
-                        { id: 'pagar', type: 'use-case', text: 'Realizar Pagamento', position: { x: 350, y: 280 }, 
-                          color: '#86efac', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90 },
-                        { id: 'lancar', type: 'use-case', text: 'Lançar Venda', position: { x: 600, y: 180 }, 
-                          color: '#fecaca', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90 }
+                        {
+                            id: 'cliente', type: 'actor', text: 'Cliente', position: { x: 100, y: 200 }, color: '#7dd3fc',
+                            connectionPoints: ['bottom'], width: 150, height: 80
+                        },
+                        {
+                            id: 'vendedor', type: 'actor', text: 'Vendedor', position: { x: 100, y: 450 }, color: '#fde68a',
+                            connectionPoints: ['bottom'], width: 150, height: 80
+                        },
+                        {
+                            id: 'sistema', type: 'label', text: 'Sistema: Controlar Vendas', position: { x: 500, y: 50 },
+                            width: 300, height: 40, color: '#dbeafe', fontSize: 18
+                        },
+                        {
+                            id: 'selecionar', type: 'use-case', text: 'Selecionar Produtos', position: { x: 350, y: 150 },
+                            color: '#86efac', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90
+                        },
+                        {
+                            id: 'pagar', type: 'use-case', text: 'Realizar Pagamento', position: { x: 350, y: 280 },
+                            color: '#86efac', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90
+                        },
+                        {
+                            id: 'lancar', type: 'use-case', text: 'Lançar Venda', position: { x: 600, y: 180 },
+                            color: '#fecaca', connectionPoints: ['top', 'right', 'bottom', 'left'], width: 180, height: 90
+                        }
                     ];
-                    
+
                     // Default connections
                     state.connections = [
-                        { id: 'conn1', source: 'cliente', target: 'selecionar', type: 'association', 
-                          sourcePoint: 'bottom', targetPoint: 'top', label: '' },
-                        { id: 'conn2', source: 'cliente', target: 'pagar', type: 'association', 
-                          sourcePoint: 'bottom', targetPoint: 'top', label: '' },
-                        { id: 'conn3', source: 'selecionar', target: 'lancar', type: 'include', 
-                          sourcePoint: 'right', targetPoint: 'left', label: '<<inclui>>' }
+                        {
+                            id: 'conn1', source: 'cliente', target: 'selecionar', type: 'association',
+                            sourcePoint: 'bottom', targetPoint: 'top', label: '', lineStyle: 'solid'
+                        },
+                        {
+                            id: 'conn2', source: 'cliente', target: 'pagar', type: 'association',
+                            sourcePoint: 'bottom', targetPoint: 'top', label: '', lineStyle: 'solid'
+                        },
+                        {
+                            id: 'conn3', source: 'selecionar', target: 'lancar', type: 'include',
+                            sourcePoint: 'right', targetPoint: 'left', label: '<<inclui>>', lineStyle: 'solid'
+                        }
                     ];
-                    
+
                     // Initialize history
                     addToHistory();
                 }
             }
-            
+
             // Render all diagram elements
             function renderDiagram() {
                 // Clear SVG
                 svg.innerHTML = '';
-                
+
                 // Adicionar a seta de arraste novamente (limpei no innerHTML)
                 const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
                 const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
@@ -778,91 +1101,98 @@
                 marker.appendChild(path);
                 defs.appendChild(marker);
                 svg.appendChild(defs);
-                
+
                 // Clear diagram area first
                 const elementsToRemove = diagramArea.querySelectorAll('.draggable-element, .connection-point');
                 elementsToRemove.forEach(el => el.remove());
-                
+
                 // Set grid background
                 if (state.gridEnabled) {
                     diagramArea.classList.add('grid-bg');
+                    diagramArea.style.backgroundSize = `${state.gridSize}px ${state.gridSize}px`;
                 } else {
                     diagramArea.classList.remove('grid-bg');
                 }
-                
+
                 // Render elements
                 state.elements.forEach(element => {
                     createDiagramElement(element);
                 });
-                
+
                 // Render connections
                 renderConnections();
-                
+
                 // Render connection points for all elements
                 state.elements.forEach(element => {
                     renderConnectionPoints(element);
                 });
-                
+
                 // Update connections list
                 updateConnectionsList();
             }
-            
+
             // Update connections list in sidebar
             function updateConnectionsList() {
                 connectionsList.innerHTML = '';
-                
-                const elementConnections = state.connections.filter(conn => 
-                    conn.source === state.selectedElement?.id || conn.target === state.selectedElement?.id
+
+                if (state.selectedElements.length === 0) {
+                    connectionsList.innerHTML = '<p class="text-sm text-gray-500 italic">Nenhuma conexão</p>';
+                    return;
+                }
+
+                const elementConnections = state.connections.filter(conn =>
+                    state.selectedElements.some(el => el.id === conn.source || el.id === conn.target)
                 );
-                
+
                 if (elementConnections.length === 0) {
                     connectionsList.innerHTML = '<p class="text-sm text-gray-500 italic">Nenhuma conexão</p>';
                     return;
                 }
-                
+
                 elementConnections.forEach(conn => {
                     const source = state.elements.find(e => e.id === conn.source);
                     const target = state.elements.find(e => e.id === conn.target);
-                    
+
                     if (!source || !target) return;
-                    
+
                     const connItem = document.createElement('div');
                     connItem.className = `connection-item ${state.selectedConnection?.id === conn.id ? 'selected' : ''}`;
                     connItem.innerHTML = `
                         <div class="flex items-center justify-between">
                             <div>
-                                <div class="text-xs text-gray-500">${getConnectionTypeName(conn.type)}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${getConnectionTypeName(conn.type)}</div>
                                 <div class="font-medium">${source.text} → ${target.text}</div>
                             </div>
                             <div class="w-3 h-3 rounded-full" style="background-color: ${getConnectionColor(conn.type)}"></div>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1">${conn.label || 'Sem rótulo'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">${conn.label || 'Sem rótulo'}</div>
                     `;
-                    
+
                     connItem.addEventListener('click', () => {
                         state.selectedConnection = conn;
                         renderDiagram();
                         renderConnectionProperties(conn);
                     });
-                    
+
                     connectionsList.appendChild(connItem);
                 });
             }
-            
+
             // Create DOM element for a diagram component
             function createDiagramElement(elementData) {
                 let element;
-                
+
                 if (elementData.type === 'actor') {
                     element = document.createElement('div');
-                    element.className = `actor draggable-element ${state.selectedElement?.id === elementData.id ? 'selected-element' : ''}`;
+                    element.className = `actor draggable-element ${state.selectedElements.some(el => el.id === elementData.id) ? 'selected-element' : ''
+                        }`;
                     element.style.backgroundColor = elementData.color;
                     element.style.borderColor = adjustColor(elementData.color, -20);
                     element.style.left = `${elementData.position.x}px`;
                     element.style.top = `${elementData.position.y}px`;
                     element.style.width = `${elementData.width}px`;
                     element.style.height = `${elementData.height}px`;
-                    
+
                     element.innerHTML = `
                         <div class="flex flex-col items-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
@@ -871,17 +1201,18 @@
                             <div class="text-center font-medium mt-1">${elementData.text}</div>
                         </div>
                     `;
-                } 
+                }
                 else if (elementData.type === 'use-case') {
                     element = document.createElement('div');
-                    element.className = `use-case draggable-element ${state.selectedElement?.id === elementData.id ? 'selected-element' : ''}`;
+                    element.className = `use-case draggable-element ${state.selectedElements.some(el => el.id === elementData.id) ? 'selected-element' : ''
+                        }`;
                     element.style.backgroundColor = elementData.color;
                     element.style.borderColor = adjustColor(elementData.color, -20);
                     element.style.left = `${elementData.position.x}px`;
                     element.style.top = `${elementData.position.y}px`;
                     element.style.width = `${elementData.width}px`;
                     element.style.height = `${elementData.height}px`;
-                    
+
                     element.innerHTML = `
                         <div class="text-center px-4 py-2">
                             <div class="font-medium">${elementData.text}</div>
@@ -890,7 +1221,8 @@
                 }
                 else if (elementData.type === 'label') {
                     element = document.createElement('div');
-                    element.className = `absolute text-center font-medium ${state.selectedElement?.id === elementData.id ? 'selected-element' : ''}`;
+                    element.className = `absolute text-center font-medium ${state.selectedElements.some(el => el.id === elementData.id) ? 'selected-element' : ''
+                        }`;
                     element.style.backgroundColor = elementData.color;
                     element.style.left = `${elementData.position.x}px`;
                     element.style.top = `${elementData.position.y}px`;
@@ -901,46 +1233,61 @@
                     element.style.borderRadius = '8px';
                     element.textContent = elementData.text;
                 }
-                
+
                 element.setAttribute('data-id', elementData.id);
                 element.addEventListener('mousedown', (e) => {
                     if (e.button === 0) { // Left mouse button
-                        selectElement(elementData.id);
+                        if (e.shiftKey) {
+                            // Multi-select mode
+                            const element = state.elements.find(el => el.id === elementData.id);
+                            if (element) {
+                                const index = state.selectedElements.findIndex(el => el.id === elementData.id);
+                                if (index === -1) {
+                                    state.selectedElements.push(element);
+                                } else {
+                                    state.selectedElements.splice(index, 1);
+                                }
+                                renderDiagram();
+                            }
+                        } else {
+                            // Single select
+                            selectElement(elementData.id);
+                        }
                     }
                 });
-                
+
                 diagramArea.appendChild(element);
                 return element;
             }
-            
+
             // Render connection points for an element
             function renderConnectionPoints(elementData) {
                 const element = diagramArea.querySelector(`[data-id="${elementData.id}"]`);
                 if (!element) return;
-                
+
                 // Remove existing connection points
                 const existingPoints = element.querySelectorAll('.connection-point');
                 existingPoints.forEach(point => point.remove());
-                
+
                 const rect = element.getBoundingClientRect();
                 const diagramRect = diagramArea.getBoundingClientRect();
-                
+
                 // Calculate relative positions within diagram
                 const elementLeft = rect.left - diagramRect.left;
                 const elementTop = rect.top - diagramRect.top;
                 const elementWidth = rect.width;
                 const elementHeight = rect.height;
-                
+
                 // Add connection points based on the element's definition
                 elementData.connectionPoints?.forEach(point => {
                     const connectionPoint = document.createElement('div');
                     connectionPoint.className = 'connection-point';
                     connectionPoint.setAttribute('data-element', elementData.id);
                     connectionPoint.setAttribute('data-point', point);
-                    
+
                     // Position the point at the center of the requested edge
                     let left, top;
-                    switch(point) {
+                    switch (point) {
                         case 'top':
                             left = elementLeft + (elementWidth / 2) - 6;
                             top = elementTop - 6;
@@ -958,10 +1305,10 @@
                             top = elementTop + (elementHeight / 2) - 6;
                             break;
                     }
-                    
+
                     connectionPoint.style.left = `${left}px`;
                     connectionPoint.style.top = `${top}px`;
-                    
+
                     // Add hover effect
                     connectionPoint.addEventListener('mouseover', () => {
                         connectionPoint.classList.add('connection-point-highlight');
@@ -974,92 +1321,97 @@
                             });
                         }
                     });
-                    
+
                     connectionPoint.addEventListener('mouseout', () => {
                         connectionPoint.classList.remove('connection-point-highlight');
                         document.querySelectorAll('.connection-point').forEach(p => {
                             p.classList.remove('connection-candidate');
                         });
                     });
-                    
+
                     connectionPoint.addEventListener('mousedown', (e) => {
                         if (state.mode !== 'connect') {
                             state.mode = 'connect';
                             connectionStatus.classList.remove('hidden');
-                            document.getElementById('currentMode').textContent = `Conectando: ${state.connectionType}`;
                         }
-                        
+
                         // Deselect any existing selected element
-                        state.selectedElement = null;
+                        state.selectedElements = [];
                         state.selectedConnection = null;
                         renderDiagram();
-                        
+
                         // Highlight all connection points as potential targets
                         document.querySelectorAll('.connection-point').forEach(p => {
                             if (p !== e.target) {
                                 p.classList.add('connection-candidate');
                             }
                         });
-                        
+
                         state.connecting = true;
                         state.connectionSource = {
                             element: elementData.id,
                             point: point
                         };
-                        
+
                         e.stopPropagation();
                     });
-                    
+
                     diagramArea.appendChild(connectionPoint);
                 });
             }
-            
+
             // Render all connections in SVG
             function renderConnections() {
                 state.connections.forEach(conn => {
                     const sourceElement = state.elements.find(e => e.id === conn.source);
                     const targetElement = state.elements.find(e => e.id === conn.target);
-                    
+
                     if (!sourceElement || !targetElement) return;
-                    
+
                     // Get positions of the connection points
                     const startPoint = getElementConnectionPoint(sourceElement, conn.sourcePoint);
                     const endPoint = getElementConnectionPoint(targetElement, conn.targetPoint);
-                    
+
                     if (!startPoint || !endPoint) return;
-                    
+
                     // Draw connection line
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     const midX = (startPoint.x + endPoint.x) / 2;
-                    
+
                     // Create a curved path (to avoid overlapping elements)
                     const d = `M ${startPoint.x} ${startPoint.y} 
                                C ${midX} ${startPoint.y}, ${midX} ${endPoint.y}, 
                                ${endPoint.x} ${endPoint.y}`;
-                    
+
                     path.setAttribute('d', d);
-                    path.setAttribute('class', `connector-line ${conn.type} ${state.selectedConnection?.id === conn.id ? 'selected-connection' : ''}`);
+                    path.setAttribute('class', `connector-line ${conn.type} ${state.selectedConnection?.id === conn.id ? 'selected-connection' : ''
+                        } ${conn.lineStyle !== 'solid' ? conn.lineStyle : ''}`);
                     path.setAttribute('data-connection-id', conn.id);
-                    
+
                     // Add arrowhead
                     const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
                     const arrowX = endPoint.x - 10 * Math.cos(angle);
                     const arrowY = endPoint.y - 10 * Math.sin(angle);
-                    
+
                     const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    arrow.setAttribute('d', `M ${arrowX-5} ${arrowY-5} L ${arrowX} ${arrowY} L ${arrowX-5} ${arrowY+5} Z`);
+                    arrow.setAttribute('d', `M ${arrowX - 5} ${arrowY - 5} L ${arrowX} ${arrowY} L ${arrowX - 5} ${arrowY + 5} Z`);
                     arrow.setAttribute('class', `arrowhead ${conn.type}`);
-                    
+
                     // Make connection selectable
                     path.addEventListener('click', (e) => {
                         const connectionId = e.target.getAttribute('data-connection-id');
                         const connection = state.connections.find(conn => conn.id === connectionId);
                         if (connection) {
-                            selectConnection(connectionId);
+                            if (e.shiftKey) {
+                                // Multi-select for connections (if implemented)
+                                selectConnection(connectionId);
+                            } else {
+                                selectConnection(connectionId);
+                            }
                         }
                         e.stopPropagation();
                     });
-                    
+
                     path.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         const connectionId = e.target.getAttribute('data-connection-id');
@@ -1069,34 +1421,83 @@
                             showConnectionContextMenu(e.clientX, e.clientY);
                         }
                     });
-                    
+
                     svg.appendChild(path);
                     svg.appendChild(arrow);
-                    
+
                     // Add label if exists
                     if (conn.label) {
                         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                         text.setAttribute('x', midX);
                         text.setAttribute('y', (startPoint.y + endPoint.y) / 2 - 10);
                         text.setAttribute('class', 'connection-label');
+                        text.setAttribute('data-connection-id', conn.id);
                         text.textContent = conn.label;
+
+                        // Make label draggable
+                        text.addEventListener('mousedown', (e) => {
+                            e.stopPropagation();
+                            const connectionId = e.target.getAttribute('data-connection-id');
+                            const connection = state.connections.find(conn => conn.id === connectionId);
+                            if (connection) {
+                                state.selectedConnection = connection;
+                                state.draggingLabel = true;
+
+                                const startX = parseFloat(text.getAttribute('x'));
+                                const startY = parseFloat(text.getAttribute('y'));
+
+                                const moveHandler = (e) => {
+                                    const diagramRect = diagramArea.getBoundingClientRect();
+                                    const mouseX = e.clientX - diagramRect.left;
+                                    const mouseY = e.clientY - diagramRect.top;
+
+                                    text.setAttribute('x', mouseX);
+                                    text.setAttribute('y', mouseY);
+                                };
+
+                                const upHandler = () => {
+                                    document.removeEventListener('mousemove', moveHandler);
+                                    document.removeEventListener('mouseup', upHandler);
+                                    state.draggingLabel = false;
+
+                                    // Save the label position
+                                    if (state.selectedConnection) {
+                                        state.selectedConnection.labelPosition = {
+                                            x: parseFloat(text.getAttribute('x')),
+                                            y: parseFloat(text.getAttribute('y'))
+                                        };
+                                        saveState();
+                                    }
+                                };
+
+                                document.addEventListener('mousemove', moveHandler);
+                                document.addEventListener('mouseup', upHandler);
+                            }
+                        });
+
                         svg.appendChild(text);
+
+                        // Position label if saved position exists
+                        if (conn.labelPosition) {
+                            text.setAttribute('x', conn.labelPosition.x);
+                            text.setAttribute('y', conn.labelPosition.y);
+                        }
                     }
                 });
             }
-            
+
             // Get absolute position of a connection point
             function getElementConnectionPoint(element, pointType) {
                 const domElement = diagramArea.querySelector(`[data-id="${element.id}"]`);
                 if (!domElement) return null;
-                
+
                 const rect = domElement.getBoundingClientRect();
                 const diagramRect = diagramArea.getBoundingClientRect();
-                
+
                 const left = rect.left - diagramRect.left;
                 const top = rect.top - diagramRect.top;
-                
-                switch(pointType) {
+
+                switch (pointType) {
                     case 'top':
                         return { x: left + rect.width / 2, y: top };
                     case 'right':
@@ -1109,11 +1510,11 @@
                         return { x: left + rect.width / 2, y: top + rect.height / 2 };
                 }
             }
-            
+
             // Function to adjust color lightness
             function adjustColor(color, amount) {
-                color = color.replace("#","");
-                var num = parseInt(color,16);
+                color = color.replace("#", "");
+                var num = parseInt(color, 16);
                 var r = (num >> 16) + amount;
                 if (r > 255) r = 255;
                 else if (r < 0) r = 0;
@@ -1125,47 +1526,55 @@
                 else if (g < 0) g = 0;
                 return "#" + (g | (b << 8) | (r << 16)).toString(16);
             }
-            
+
             // Get connection type name
             function getConnectionTypeName(type) {
-                switch(type) {
+                switch (type) {
                     case 'association': return 'Associação';
                     case 'include': return 'Include';
                     case 'extend': return 'Extend';
                     default: return 'Conexão';
                 }
             }
-            
+
             // Get connection color
             function getConnectionColor(type) {
-                switch(type) {
+                switch (type) {
                     case 'association': return '#6b7280';
                     case 'include': return '#8b5cf6';
                     case 'extend': return '#ec4899';
                     default: return '#4b5563';
                 }
             }
-            
+
             // Render connection properties in editor
             function renderConnectionProperties(connection) {
                 elementForm.innerHTML = `
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Conexão: ${getConnectionTypeName(connection.type)}</label>
-                        <div class="text-xs text-gray-500">${connection.source} → ${connection.target}</div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Conexão: ${getConnectionTypeName(connection.type)}</label>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${connection.source} → ${connection.target}</div>
                     </div>
                     <div class="connection-form">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                            <select id="editConnectionType" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
+                            <select id="editConnectionType" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
                                 <option value="association" ${connection.type === 'association' ? 'selected' : ''}>Associação</option>
                                 <option value="include" ${connection.type === 'include' ? 'selected' : ''}>Include</option>
                                 <option value="extend" ${connection.type === 'extend' ? 'selected' : ''}>Extend</option>
                             </select>
                         </div>
                         <div class="mt-3">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Rótulo</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rótulo</label>
                             <input type="text" id="editConnectionLabel" value="${connection.label || ''}" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Estilo da Linha</label>
+                            <select id="editConnectionLineStyle" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+                                <option value="solid" ${connection.lineStyle === 'solid' ? 'selected' : ''}>Sólida</option>
+                                <option value="dashed" ${connection.lineStyle === 'dashed' ? 'selected' : ''}>Tracejada</option>
+                                <option value="dotted" ${connection.lineStyle === 'dotted' ? 'selected' : ''}>Pontilhada</option>
+                            </select>
                         </div>
                         <div class="mt-4">
                             <button id="saveConnectionPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm">
@@ -1174,20 +1583,36 @@
                         </div>
                     </div>
                 `;
-                
+
                 document.getElementById('saveConnectionPropsBtn').addEventListener('click', () => {
                     connection.type = document.getElementById('editConnectionType').value;
                     connection.label = document.getElementById('editConnectionLabel').value;
+                    connection.lineStyle = document.getElementById('editConnectionLineStyle').value;
+
+                    // Add default text for include/extend
+                    if (connection.type === 'include' && !connection.label) {
+                        connection.label = '<<inclui>>';
+                    } else if (connection.type === 'extend' && !connection.label) {
+                        connection.label = '<<estende>>';
+                    } else if (connection.type === 'association') {
+                        connection.label = '';
+                    }
+
                     renderDiagram();
                     saveState();
                 });
             }
-            
+
+            // Update workspace position
+            function updateWorkspacePosition() {
+                diagramArea.style.transform = `scale(${state.scale}) translate(${state.workspacePosition.x}px, ${state.workspacePosition.y}px)`;
+            }
+
             // Event listeners setup
             function setupEventListeners() {
                 // Save diagram state periodically and on events
                 setInterval(saveState, 30000); // Auto-save every 30 seconds
-                
+
                 // Toolbar buttons
                 document.getElementById('saveBtn').addEventListener('click', saveState);
                 document.getElementById('resetBtn').addEventListener('click', resetDiagram);
@@ -1198,39 +1623,79 @@
                 document.getElementById('closeEditorBtn').addEventListener('click', hideElementEditor);
                 document.getElementById('undoBtn').addEventListener('click', undo);
                 document.getElementById('redoBtn').addEventListener('click', redo);
-                
+                document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+                document.getElementById('helpBtn').addEventListener('click', () => {
+                    helpModal.style.display = 'flex';
+                });
+
+                // Grid options
+                document.querySelectorAll('.grid-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        const size = parseInt(option.getAttribute('data-size'));
+                        state.gridSize = size;
+                        state.gridEnabled = size > 0;
+
+                        // Update active state
+                        document.querySelectorAll('.grid-option').forEach(opt => {
+                            opt.classList.remove('active');
+                        });
+                        option.classList.add('active');
+
+                        renderDiagram();
+                        saveState();
+                        gridOptions.style.display = 'none';
+                    });
+                });
+
                 // Zoom controls
                 document.getElementById('zoomInBtn').addEventListener('click', zoomIn);
                 document.getElementById('zoomOutBtn').addEventListener('click', zoomOut);
                 document.getElementById('resetZoomBtn').addEventListener('click', resetZoom);
-                
+
                 // Element adding mode
                 document.getElementById('addActorBtn').addEventListener('click', () => prepareAddElement('actor'));
                 document.getElementById('addUseCaseBtn').addEventListener('click', () => prepareAddElement('use-case'));
-                
+
                 // Connection modes
                 document.getElementById('addAssociationBtn').addEventListener('click', () => setConnectionType('association'));
                 document.getElementById('addIncludeBtn').addEventListener('click', () => setConnectionType('include'));
                 document.getElementById('addExtendBtn').addEventListener('click', () => setConnectionType('extend'));
-                
+
+                // Line styles
+                document.getElementById('solidLineBtn').addEventListener('click', () => setLineStyle('solid'));
+                document.getElementById('dashedLineBtn').addEventListener('click', () => setLineStyle('dashed'));
+                document.getElementById('dottedLineBtn').addEventListener('click', () => setLineStyle('dotted'));
+
                 // Diagram area events
                 diagramArea.addEventListener('mousedown', handleDiagramMouseDown);
                 document.addEventListener('mousemove', handleDiagramMouseMove);
                 document.addEventListener('mouseup', handleDiagramMouseUp);
-                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        state.mode = 'select';
+                        state.connecting = false;
+                        connectionStatus.classList.add('hidden');
+                        document.querySelectorAll('.connection-point').forEach(p => {
+                            p.classList.remove('connection-candidate');
+                        });
+                        const tempLine = svg.querySelector('.dragging-connection-arrow');
+                        if (tempLine) tempLine.remove();
+                    }
+                });
+
                 // Handle context menu
                 diagramArea.addEventListener('contextmenu', showContextMenu);
                 document.addEventListener('click', hideContextMenu);
                 document.getElementById('editElementBtn').addEventListener('click', editSelectedElement);
                 document.getElementById('deleteElementBtn').addEventListener('click', deleteSelectedElement);
                 document.getElementById('viewConnectionsBtn').addEventListener('click', () => {
-                    if (state.selectedElement) {
-                        showElementEditor(state.selectedElement);
+                    if (state.selectedElements.length > 0) {
+                        showElementEditor(state.selectedElements[0]);
                     }
                 });
                 document.getElementById('editConnectionBtn').addEventListener('click', editConnection);
                 document.getElementById('deleteConnectionBtn').addEventListener('click', deleteSelectedConnection);
-                
+
                 // Modal buttons
                 document.getElementById('cancelAddBtn').addEventListener('click', () => addElementModal.style.display = 'none');
                 document.getElementById('addElementConfirmBtn').addEventListener('click', addNewElement);
@@ -1239,16 +1704,16 @@
                 document.getElementById('cancelExport').addEventListener('click', () => exportModal.style.display = 'none');
                 document.getElementById('exportPNG').addEventListener('click', exportAsPNG);
                 document.getElementById('exportPDF').addEventListener('click', exportAsPDF);
-                document.getElementById('helpBtn').addEventListener('click', () => helpModal.style.display = 'flex');
+                document.getElementById('exportSVG').addEventListener('click', exportAsSVG);
                 document.getElementById('closeHelpBtn').addEventListener('click', () => helpModal.style.display = 'none');
-                
+
                 // Color selection in modal
                 document.querySelectorAll('.color-preview').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const color = e.target.getAttribute('data-color');
                         document.getElementById('elementColor').value = color;
                         e.target.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
-                        
+
                         // Remove selection from others
                         e.target.parentElement.parentElement.querySelectorAll('.color-preview')
                             .forEach(el => {
@@ -1258,31 +1723,45 @@
                             });
                     });
                 });
+
+                // Workspace dragging
+                workspaceHandle.addEventListener('mousedown', startWorkspaceDrag);
+                workspaceHandle.addEventListener('click', () => {
+                    gridOptions.style.display = gridOptions.style.display === 'block' ? 'none' : 'block';
+                });
             }
-            
+
             // Set connection type
             function setConnectionType(type) {
                 state.connectionType = type;
-                
+
                 // Highlight the button
                 document.querySelectorAll('#connectionTypeToolbar .toolbar-button').forEach(btn => {
                     btn.classList.remove('active');
                 });
-                
-                document.querySelectorAll('#connectionTypeToolbar .toolbar-button').forEach(btn => {
-                    if (btn.id.includes(type) || btn.querySelector('i').className.includes(type)) {
-                        btn.classList.add('active');
-                    }
-                });
+
+                document.getElementById(`add${type.charAt(0).toUpperCase() + type.slice(1)}Btn`).classList.add('active');
             }
-            
+
+            // Set line style
+            function setLineStyle(style) {
+                state.lineStyle = style;
+
+                // Highlight the button
+                document.querySelectorAll('#lineStyleToolbar .toolbar-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                document.getElementById(`${style}LineBtn`).classList.add('active');
+            }
+
             // Reset diagram to initial state
             function resetDiagram() {
                 if (confirm('Você tem certeza que quer reiniciar o diagrama? Todas as alterações serão perdidas.')) {
                     localStorage.removeItem('malumaShoesDiagram');
                     state.elements = [];
                     state.connections = [];
-                    state.selectedElement = null;
+                    state.selectedElements = [];
                     state.selectedConnection = null;
                     state.history = [];
                     state.historyIndex = -1;
@@ -1290,63 +1769,70 @@
                     renderDiagram();
                 }
             }
-            
+
             // Toggle grid visibility
             function toggleGrid() {
                 state.gridEnabled = !state.gridEnabled;
                 renderDiagram();
                 saveState();
             }
-            
+
             // Zoom functions
             function zoomIn() {
                 state.scale = Math.min(2, state.scale + 0.1);
-                diagramArea.style.transform = `scale(${state.scale})`;
+                updateWorkspacePosition();
                 saveState();
             }
-            
+
             function zoomOut() {
                 state.scale = Math.max(0.5, state.scale - 0.1);
-                diagramArea.style.transform = `scale(${state.scale})`;
+                updateWorkspacePosition();
                 saveState();
             }
-            
+
             function resetZoom() {
                 state.scale = 1;
-                diagramArea.style.transform = `scale(${state.scale})`;
+                updateWorkspacePosition();
                 saveState();
             }
-            
+
+            // Toggle dark mode
+            function toggleDarkMode() {
+                document.documentElement.classList.toggle('dark');
+                state.darkMode = !state.darkMode;
+                saveState();
+            }
+
             // Prepare to add a new element
             function prepareAddElement(type) {
                 state.mode = type === 'actor' ? 'add-actor' : 'add-usecase';
-                
+
                 // Show modal
                 addElementModal.style.display = 'flex';
-                document.getElementById('modalTitle').textContent = 
+                document.getElementById('modalTitle').textContent =
                     type === 'actor' ? 'Adicionar Ator' : 'Adicionar Caso de Uso';
-                
+
                 // Set up form in modal
                 document.getElementById('elementName').value = '';
                 document.getElementById('elementType').value = type;
                 document.getElementById('elementTypeContainer').style.display = 'none';
                 document.getElementById('elementColorContainer').style.display = 'block';
-                
+
                 // Set default color
                 document.querySelector('.color-preview').classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
             }
-            
+
             // Add a new element to diagram
             function addNewElement() {
                 const name = document.getElementById('elementName').value.trim();
                 const color = '#' + document.getElementById('elementColor').value;
                 const type = document.getElementById('elementType').value;
-                
+
                 if (!name) {
                     alert('Por favor, digite um nome para o elemento.');
                     return;
                 }
-                
+
                 const newElement = {
                     id: `element_${Date.now()}`,
                     type: type,
@@ -1357,69 +1843,93 @@
                     height: type === 'actor' ? 80 : 90,
                     connectionPoints: type === 'actor' ? ['bottom'] : ['top', 'right', 'bottom', 'left']
                 };
-                
+
                 state.elements.push(newElement);
                 renderDiagram();
-                selectElement(newElement.id);
-                
+                state.selectedElements = [newElement];
+
                 // Close modal
                 addElementModal.style.display = 'none';
                 state.mode = 'select';
-                document.getElementById('currentMode').textContent = 'Selecionar (Shift + S)';
             }
-            
+
+            // Start workspace dragging
+            function startWorkspaceDrag(e) {
+                e.preventDefault();
+                state.workspaceDragging = true;
+                state.workspaceDragStart = { x: e.clientX, y: e.clientY };
+            }
+
             // Handle mouse events on diagram
             function handleDiagramMouseDown(e) {
                 // Right-click handled by context menu
                 if (e.button === 2) return;
-                
+
                 const target = e.target;
                 const isConnectionPoint = target.classList.contains('connection-point');
-                const elementId = isConnectionPoint 
-                    ? target.getAttribute('data-element') 
+                const elementId = isConnectionPoint
+                    ? target.getAttribute('data-element')
                     : target.closest('.draggable-element')?.getAttribute('data-id');
-                
+
                 // Connection mode
                 if (isConnectionPoint) {
                     // This is handled directly in connection-point listener
                     return;
                 }
-                
+
                 // Select element
                 if (elementId) {
                     const element = state.elements.find(el => el.id === elementId);
                     if (element) {
-                        selectElement(elementId);
+                        // Shift key for multi-select
+                        if (e.shiftKey) {
+                            const index = state.selectedElements.findIndex(el => el.id === elementId);
+                            if (index >= 0) {
+                                state.selectedElements.splice(index, 1);
+                            } else {
+                                state.selectedElements.push(element);
+                            }
+                        } else {
+                            state.selectedElements = [element];
+                        }
+
                         state.dragging = true;
-                        
+
                         // Position for dragging
                         const rect = diagramArea.getBoundingClientRect();
                         state.dragOffset = {
                             x: (e.clientX - rect.left) / state.scale - element.position.x,
                             y: (e.clientY - rect.top) / state.scale - element.position.y
                         };
+
+                        renderDiagram();
                     }
-                } 
+                }
                 else {
                     // Clear selection if clicking empty space
-                    state.selectedElement = null;
+                    state.selectedElements = [];
                     state.selectedConnection = null;
                     state.mode = 'select';
-                    document.getElementById('currentMode').textContent = 'Selecionar (Shift + S)';
                     connectionStatus.classList.add('hidden');
                     hideElementEditor();
                     renderDiagram();
+
+                    // Start selection box
+                    state.selectionStart = {
+                        x: e.clientX,
+                        y: e.clientY
+                    };
                 }
-                
+
                 // Adding mode - place new element
                 if ((state.mode === 'add-actor' || state.mode === 'add-usecase') && !elementId) {
                     const rect = diagramArea.getBoundingClientRect();
                     const x = (e.clientX - rect.left) / state.scale;
                     const y = (e.clientY - rect.top) / state.scale;
-                    
+
                     const type = state.mode === 'add-actor' ? 'actor' : 'use-case';
                     const color = type === 'actor' ? '#7dd3fc' : '#86efac';
-                    
+
                     const newElement = {
                         id: `element_${Date.now()}`,
                         type: type,
@@ -1430,30 +1940,54 @@
                         height: type === 'actor' ? 80 : 90,
                         connectionPoints: type === 'actor' ? ['bottom'] : ['top', 'right', 'bottom', 'left']
                     };
-                    
+
                     state.elements.push(newElement);
+                    state.selectedElements = [newElement];
                     renderDiagram();
-                    selectElement(newElement.id);
                     state.mode = 'select';
-                    document.getElementById('currentMode').textContent = 'Selecionar (Shift + S)';
                 }
             }
-            
+
             function handleDiagramMouseMove(e) {
+                // Dragging workspace
+                if (state.workspaceDragging) {
+                    const dx = (e.clientX - state.workspaceDragStart.x) / state.scale;
+                    const dy = (e.clientY - state.workspaceDragStart.y) / state.scale;
+                    state.workspacePosition.x += dx;
+                    state.workspacePosition.y += dy;
+                    state.workspaceDragStart = { x: e.clientX, y: e.clientY };
+                    updateWorkspacePosition();
+                    return;
+                }
+
                 // Dragging element
-                if (state.dragging && state.selectedElement) {
+                if (state.dragging && state.selectedElements.length > 0) {
                     const rect = diagramArea.getBoundingClientRect();
                     const x = (e.clientX - rect.left) / state.scale - state.dragOffset.x;
                     const y = (e.clientY - rect.top) / state.scale - state.dragOffset.y;
-                    
-                    const element = state.elements.find(el => el.id === state.selectedElement.id);
-                    if (element) {
+
+                    state.selectedElements.forEach(element => {
                         element.position.x = x;
                         element.position.y = y;
-                        renderDiagram();
-                    }
+                    });
+
+                    renderDiagram();
                 }
-                
+
+                // Drawing selection box
+                if (state.selectionStart) {
+                    const startX = state.selectionStart.x;
+                    const startY = state.selectionStart.y;
+                    const currentX = e.clientX;
+                    const currentY = e.clientY;
+
+                    selectionBox.style.left = Math.min(startX, currentX) + 'px';
+                    selectionBox.style.top = Math.min(startY, currentY) + 'px';
+                    selectionBox.style.width = Math.abs(currentX - startX) + 'px';
+                    selectionBox.style.height = Math.abs(currentY - startY) + 'px';
+                    selectionBox.classList.remove('hidden');
+                }
+
                 // Drawing connection
                 if (state.connecting && state.connectionSource) {
                     // Find source element
@@ -1462,35 +1996,35 @@
                         state.connecting = false;
                         return;
                     }
-                    
+
                     // Get source connection point
                     const sourcePoint = getElementConnectionPoint(sourceElement, state.connectionSource.point);
                     if (!sourcePoint) {
                         state.connecting = false;
                         return;
                     }
-                    
+
                     // Calculate mouse position relative to diagram
                     const diagramRect = diagramArea.getBoundingClientRect();
                     const mouseX = e.clientX - diagramRect.left;
                     const mouseY = e.clientY - diagramRect.top;
-                    
+
                     // Draw connection line from source to mouse
-                    const path = svg.querySelector('.dragging-connection-arrow') || 
-                                document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    
+                    const path = svg.querySelector('.dragging-connection-arrow') ||
+                        document.createElementNS('http://www.w3.org/2000/svg', 'line');
+
                     path.setAttribute('class', 'dragging-connection-arrow');
                     path.setAttribute('x1', sourcePoint.x);
                     path.setAttribute('y1', sourcePoint.y);
                     path.setAttribute('x2', mouseX);
                     path.setAttribute('y2', mouseY);
                     path.setAttribute('marker-end', 'url(#dragging-arrow)');
-                    
+
                     // Add to SVG if not present
                     if (!svg.contains(path)) {
                         svg.appendChild(path);
                     }
-                    
+
                     // Update drag info box
                     dragInfoBox.textContent = `Conectando ${sourceElement.text}...`;
                     dragInfoBox.style.left = `${e.clientX + 15}px`;
@@ -1498,36 +2032,76 @@
                     dragInfoBox.classList.remove('hidden');
                 }
             }
-            
+
             function handleDiagramMouseUp(e) {
                 if (state.dragging) {
                     state.dragging = false;
                     saveState();
                 }
-                
+
+                if (state.workspaceDragging) {
+                    state.workspaceDragging = false;
+                    saveState();
+                }
+
+                // Finishing selection box
+                if (state.selectionStart) {
+                    selectionBox.classList.add('hidden');
+
+                    const diagramRect = diagramArea.getBoundingClientRect();
+                    const startX = state.selectionStart.x;
+                    const startY = state.selectionStart.y;
+                    const endX = e.clientX;
+                    const endY = e.clientY;
+
+                    const selectionRect = {
+                        left: Math.min(startX, endX),
+                        top: Math.min(startY, endY),
+                        right: Math.max(startX, endX),
+                        bottom: Math.max(startY, endY)
+                    };
+
+                    // Find elements within selection
+                    state.selectedElements = state.elements.filter(element => {
+                        const el = diagramArea.querySelector(`[data-id="${element.id}"]`);
+                        if (!el) return false;
+
+                        const rect = el.getBoundingClientRect();
+                        return (
+                            rect.left >= selectionRect.left &&
+                            rect.top >= selectionRect.top &&
+                            rect.right <= selectionRect.right &&
+                            rect.bottom <= selectionRect.bottom
+                        );
+                    });
+
+                    renderDiagram();
+                    state.selectionStart = null;
+                }
+
                 // Finishing connection
                 if (state.connecting && state.connectionSource) {
                     state.connecting = false;
-                    
+
                     // Remove temporary line
                     const tempLine = svg.querySelector('.dragging-connection-arrow');
                     if (tempLine) tempLine.remove();
-                    
+
                     dragInfoBox.classList.add('hidden');
-                    
+
                     // Reset candidate highlights
                     document.querySelectorAll('.connection-point').forEach(p => {
                         p.classList.remove('connection-candidate');
                     });
-                    
+
                     // Check if we released over a connection point
                     const target = e.target;
                     const isConnectionPoint = target.classList.contains('connection-point');
-                    
+
                     if (isConnectionPoint) {
                         const targetElement = target.getAttribute('data-element');
                         const targetPoint = target.getAttribute('data-point');
-                        
+
                         // Don't connect to the same element
                         if (state.connectionSource.element !== targetElement) {
                             // Create new connection
@@ -1538,174 +2112,183 @@
                                 type: state.connectionType,
                                 sourcePoint: state.connectionSource.point,
                                 targetPoint: targetPoint,
-                                label: ''
+                                label: '',
+                                lineStyle: state.lineStyle
                             };
-                            
+
                             state.connections.push(newConnection);
                             renderDiagram();
                             saveState();
-                            
+
                             // Reset state
                             state.mode = 'select';
-                            document.getElementById('currentMode').textContent = 'Selecionar (Shift + S)';
                             connectionStatus.classList.add('hidden');
                         }
                     } else {
                         // We didn't release on a valid target - cancel
                         state.mode = 'select';
-                        document.getElementById('currentMode').textContent = 'Selecionar (Shift + S)';
                         connectionStatus.classList.add('hidden');
                     }
-                    
+
                     // Reset connection state
                     state.connectionSource = null;
                 }
             }
-            
+
             // Element selection
             function selectElement(elementId) {
-                state.selectedElement = state.elements.find(el => el.id === elementId) || null;
-                state.selectedConnection = null;
-                renderDiagram();
-                
-                if (state.selectedElement) {
-                    showElementEditor(state.selectedElement);
+                const element = state.elements.find(el => el.id === elementId);
+                if (element) {
+                    state.selectedElements = [element];
+                    state.selectedConnection = null;
+                    renderDiagram();
+                    showElementEditor(element);
                 } else {
+                    state.selectedElements = [];
                     hideElementEditor();
                 }
             }
-            
+
             // Connection selection
             function selectConnection(connectionId) {
                 state.selectedConnection = state.connections.find(conn => conn.id === connectionId);
-                state.selectedElement = null;
+                state.selectedElements = [];
                 renderDiagram();
                 renderConnectionProperties(state.selectedConnection);
             }
-            
+
             // Show context menu for elements
             function showContextMenu(e) {
                 e.preventDefault();
-                
+
                 const element = e.target.closest('.draggable-element');
                 const connection = e.target.closest('path');
                 if (!element && !connection) return;
-                
+
                 hideContextMenu();
-                
+
                 if (element) {
                     const elementId = element.getAttribute('data-id');
-                    state.selectedElement = state.elements.find(el => el.id === elementId) || null;
-                    
-                    if (state.selectedElement) {
+                    const elementData = state.elements.find(el => el.id === elementId);
+
+                    if (elementData) {
+                        // Check if this element is already selected
+                        const isSelected = state.selectedElements.some(el => el.id === elementId);
+
+                        if (!isSelected) {
+                            state.selectedElements = [elementData];
+                            renderDiagram();
+                        }
+
                         contextMenu.style.display = 'block';
                         contextMenu.style.left = `${e.clientX}px`;
                         contextMenu.style.top = `${e.clientY}px`;
                     }
                 }
             }
-            
+
             // Show connection context menu
             function showConnectionContextMenu(x, y) {
                 connectionContextMenu.style.display = 'block';
                 connectionContextMenu.style.left = `${x}px`;
                 connectionContextMenu.style.top = `${y}px`;
             }
-            
+
             function hideContextMenu() {
                 contextMenu.style.display = 'none';
                 connectionContextMenu.style.display = 'none';
             }
-            
+
             // Edit selected element
             function editSelectedElement() {
                 hideContextMenu();
-                if (state.selectedElement) {
-                    showElementEditor(state.selectedElement);
+                if (state.selectedElements.length > 0) {
+                    showElementEditor(state.selectedElements[0]);
                 }
             }
-            
+
             // Delete selected element
             function deleteSelectedElement() {
                 hideContextMenu();
-                
-                if (state.selectedElement && confirm('Tem certeza que deseja excluir este elemento?')) {
-                    // Remove element
-                    state.elements = state.elements.filter(el => el.id !== state.selectedElement.id);
-                    
-                    // Remove all connections with this element
-                    state.connections = state.connections.filter(conn => 
-                        conn.source !== state.selectedElement.id && conn.target !== state.selectedElement.id);
-                    
-                    state.selectedElement = null;
+
+                if (state.selectedElements.length > 0 && confirm('Tem certeza que deseja excluir este(s) elemento(s)?')) {
+                    // Remove elements
+                    state.elements = state.elements.filter(el =>
+                        !state.selectedElements.some(selected => selected.id === el.id)
+                    );
+
+                    // Remove all connections with these elements
+                    state.connections = state.connections.filter(conn =>
+                        !state.selectedElements.some(el =>
+                            conn.source === el.id || conn.target === el.id
+                        )
+                    );
+
+                    state.selectedElements = [];
                     hideElementEditor();
                     renderDiagram();
                     saveState();
                 }
             }
-            
+
             // Show element editor sidebar
             function showElementEditor(element) {
                 state.editorVisible = true;
                 elementEditor.classList.remove('editor-hidden');
-                
+
                 // Generate form based on element type
                 let formHTML = '';
-                
+
                 if (element.type === 'actor' || element.type === 'use-case') {
                     formHTML = `
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
                             <input type="text" id="editElementName" value="${element.text}" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Cor</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cor</label>
                             <div class="flex space-x-2">
                                 <div class="flex flex-col items-center">
-                                    <button data-color="7dd3fc" class="color-preview bg-[#7dd3fc] ${
-                                        element.color === '#7dd3fc' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                                    }"></button>
-                                    <span class="text-xs mt-1">Azul</span>
+                                    <button data-color="7dd3fc" class="color-preview bg-[#7dd3fc] ${element.color === '#7dd3fc' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                        }"></button>
+                                    <span class="text-xs mt-1 dark:text-gray-300">Azul</span>
                                 </div>
                                 <div class="flex flex-col items-center">
-                                    <button data-color="86efac" class="color-preview bg-[#86efac] ${
-                                        element.color === '#86efac' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                                    }"></button>
-                                    <span class="text-xs mt-1">Verde</span>
+                                    <button data-color="86efac" class="color-preview bg-[#86efac] ${element.color === '#86efac' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                        }"></button>
+                                    <span class="text-xs mt-1 dark:text-gray-300">Verde</span>
                                 </div>
                                 <div class="flex flex-col items-center">
-                                    <button data-color="fde68a" class="color-preview bg-[#fde68a] ${
-                                        element.color === '#fde68a' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                                    }"></button>
-                                    <span class="text-xs mt-1">Amarelo</span>
+                                    <button data-color="fde68a" class="color-preview bg-[#fde68a] ${element.color === '#fde68a' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                        }"></button>
+                                    <span class="text-xs mt-1 dark:text-gray-300">Amarelo</span>
                                 </div>
                                 <div class="flex flex-col items-center">
-                                    <button data-color="fecaca" class="color-preview bg-[#fecaca] ${
-                                        element.color === '#fecaca' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                                    }"></button>
-                                    <span class="text-xs mt-1">Vermelho</span>
+                                    <button data-color="fecaca" class="color-preview bg-[#fecaca] ${element.color === '#fecaca' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
+                        }"></button>
+                                    <span class="text-xs mt-1 dark:text-gray-300">Vermelho</span>
                                 </div>
                             </div>
                             <input type="hidden" id="editElementColor" value="${element.color.replace('#', '')}">
                         </div>
                         <div class="pt-4">
-                            <button id="saveElementPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                            <button id="saveElementPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm">
                                 Salvar alterações
                             </button>
                         </div>
                     `;
                 }
-                
+
                 elementForm.innerHTML = formHTML;
-                
+
                 // Setup event listeners for the form
                 document.querySelectorAll('#elementForm .color-preview').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const color = e.target.getAttribute('data-color');
                         document.getElementById('editElementColor').value = color;
                         e.target.classList.add('ring-2', 'ring-offset-2', 'ring-blue-500');
-                        
+
                         // Remove selection from others
                         e.target.parentElement.parentElement.querySelectorAll('.color-preview')
                             .forEach(el => {
@@ -1715,59 +2298,61 @@
                             });
                     });
                 });
-                
+
                 document.getElementById('saveElementPropsBtn').addEventListener('click', saveElementChanges);
             }
-            
+
             function hideElementEditor() {
                 state.editorVisible = false;
                 elementEditor.classList.add('editor-hidden');
             }
-            
+
             // Save changes to element
             function saveElementChanges() {
-                if (!state.selectedElement) return;
-                
+                if (state.selectedElements.length === 0) return;
+
                 const name = document.getElementById('editElementName')?.value.trim();
                 const color = '#' + (document.getElementById('editElementColor')?.value || '86efac');
-                
+
                 if (name) {
-                    state.selectedElement.text = name;
+                    state.selectedElements[0].text = name;
                 }
-                
-                state.selectedElement.color = color;
-                
+
+                state.selectedElements[0].color = color;
+
                 renderDiagram();
                 saveState();
             }
-            
+
             // Edit connection
             function editConnection() {
                 hideContextMenu();
                 connectionModal.style.display = 'flex';
-                
+
                 if (state.selectedConnection) {
                     document.getElementById('connectionTypeSelect').value = state.selectedConnection.type;
                     document.getElementById('connectionLabel').value = state.selectedConnection.label || '';
+                    document.getElementById('connectionLineStyle').value = state.selectedConnection.lineStyle || 'solid';
                 }
             }
-            
+
             // Save connection changes
             function saveConnectionChanges() {
                 if (!state.selectedConnection) return;
-                
+
                 state.selectedConnection.type = document.getElementById('connectionTypeSelect').value;
                 state.selectedConnection.label = document.getElementById('connectionLabel').value;
-                
+                state.selectedConnection.lineStyle = document.getElementById('connectionLineStyle').value;
+
                 connectionModal.style.display = 'none';
                 renderDiagram();
                 saveState();
             }
-            
+
             // Delete selected connection
             function deleteSelectedConnection() {
                 hideContextMenu();
-                
+
                 if (state.selectedConnection && confirm('Tem certeza que deseja excluir esta conexão?')) {
                     state.connections = state.connections.filter(conn => conn.id !== state.selectedConnection.id);
                     state.selectedConnection = null;
@@ -1776,27 +2361,27 @@
                     saveState();
                 }
             }
-            
+
             // Export functions
             async function exportAsPNG() {
                 exportModal.style.display = 'none';
-                
+
                 try {
                     // Temporarily hide editor and drag info
                     const originalEditorState = elementEditor.style.display;
                     elementEditor.style.display = 'none';
                     dragInfoBox.classList.add('hidden');
-                    
+
                     const canvas = await html2canvas(diagramArea, {
                         scale: 2,
-                        backgroundColor: "#FFFFFF"
+                        backgroundColor: state.darkMode ? "#1f2937" : "#ffffff"
                     });
-                    
+
                     const link = document.createElement('a');
                     link.download = 'diagrama-maluma-shoes.png';
                     link.href = canvas.toDataURL('image/png');
                     link.click();
-                    
+
                     // Restore editor visibility
                     elementEditor.style.display = originalEditorState;
                 } catch (error) {
@@ -1804,29 +2389,29 @@
                     alert('Ocorreu um erro ao exportar o diagrama como PNG.');
                 }
             }
-            
+
             async function exportAsPDF() {
                 exportModal.style.display = 'none';
-                
+
                 try {
                     // Temporarily hide editor and drag info
                     const originalEditorState = elementEditor.style.display;
                     elementEditor.style.display = 'none';
                     dragInfoBox.classList.add('hidden');
-                    
+
                     const canvas = await html2canvas(diagramArea, {
                         scale: 2,
-                        backgroundColor: "#FFFFFF"
+                        backgroundColor: state.darkMode ? "#1f2937" : "#ffffff"
                     });
-                    
+
                     const imgData = canvas.toDataURL('image/jpeg', 0.9);
                     const pdf = new jsPDF('landscape');
                     const imgWidth = pdf.internal.pageSize.getWidth();
                     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                    
+
                     pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
                     pdf.save('diagrama-maluma-shoes.pdf');
-                    
+
                     // Restore editor visibility
                     elementEditor.style.display = originalEditorState;
                 } catch (error) {
@@ -1834,10 +2419,41 @@
                     alert('Ocorreu um erro ao exportar o diagrama como PDF.');
                 }
             }
-            
+
+            function exportAsSVG() {
+                exportModal.style.display = 'none';
+
+                // Clone the SVG to avoid affecting the original
+                const svgClone = svg.cloneNode(true);
+
+                // Adjust the viewBox to include the entire diagram
+                const bbox = diagramArea.getBoundingClientRect();
+                svgClone.setAttribute('viewBox', `0 0 ${bbox.width} ${bbox.height}`);
+
+                // Serialize the SVG
+                const serializer = new XMLSerializer();
+                let source = serializer.serializeToString(svgClone);
+
+                // Add namespace if not present
+                if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+                    source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+                }
+                if (!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)) {
+                    source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+                }
+
+                // Create download link
+                const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(source);
+                const link = document.createElement('a');
+                link.download = 'diagrama-maluma-shoes.svg';
+                link.href = url;
+                link.click();
+            }
+
             // Initialize the diagram
             initDiagram();
         });
     </script>
 </body>
+
 </html>
