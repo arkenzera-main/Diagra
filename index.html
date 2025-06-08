@@ -443,6 +443,15 @@
             color: #3b82f6;
         }
 
+        .diagram-label-text {
+            /* Default text color is inherited */
+        }
+
+        .dark .diagram-label-text {
+            color: #3b82f6;
+            /* Blue text color for labels in dark mode */
+        }
+
         /* Responsive styles */
         @media (max-width: 1024px) {
             #elementEditor {
@@ -919,7 +928,8 @@
                 selectionStart: null,
                 lineStyle: 'solid',
                 darkMode: false,
-                draggingLabel: false
+                draggingLabel: false,
+                dragStartMouse: null // Nova propriedade para o multi-arraste
             };
 
             // Initialize the diagram
@@ -1221,9 +1231,8 @@
                 }
                 else if (elementData.type === 'label') {
                     element = document.createElement('div');
-                    element.className = `absolute text-center font-medium ${state.selectedElements.some(el => el.id === elementData.id) ? 'selected-element' : ''
-                        }`;
-                    element.style.backgroundColor = elementData.color;
+                    // Adiciona a classe 'draggable-element' para que o título possa ser movido
+                    element.className = `draggable-element absolute text-center font-medium ${state.selectedElements.some(el => el.id === elementData.id) ? 'selected-element' : ''}`;
                     element.style.left = `${elementData.position.x}px`;
                     element.style.top = `${elementData.position.y}px`;
                     element.style.width = `${elementData.width}px`;
@@ -1232,6 +1241,17 @@
                     element.style.fontSize = `${elementData.fontSize || 16}px`;
                     element.style.borderRadius = '8px';
                     element.textContent = elementData.text;
+                    element.style.cursor = 'move'; // Muda o cursor para indicar que é móvel
+                    element.style.zIndex = '10'; // Garante que fique junto com outros elementos
+
+                    // Aplica estilo para o modo escuro para garantir a visibilidade
+                    if (document.documentElement.classList.contains('dark')) {
+                        element.style.color = '#93c5fd'; // Texto em azul-claro
+                        element.style.backgroundColor = '#1e3a8a'; // Fundo em azul-escuro
+                    } else {
+                        element.style.color = '#1f2937'; // Texto escuro para o modo claro
+                        element.style.backgroundColor = elementData.color;
+                    }
                 }
 
                 element.setAttribute('data-id', elementData.id);
@@ -1893,14 +1913,24 @@
                             state.selectedElements = [element];
                         }
 
-                        state.dragging = true;
+                        // Se o elemento clicado não estiver na seleção (e Shift não estiver pressionado), selecione apenas ele.
+                        if (!e.shiftKey) {
+                            const isSelected = state.selectedElements.some(el => el.id === element.id);
+                            if (!isSelected) {
+                                state.selectedElements = [element];
+                            }
+                        }
 
-                        // Position for dragging
+                        state.dragging = true;
                         const rect = diagramArea.getBoundingClientRect();
-                        state.dragOffset = {
-                            x: (e.clientX - rect.left) / state.scale - element.position.x,
-                            y: (e.clientY - rect.top) / state.scale - element.position.y
+                        // Armazena a posição inicial do mouse e de cada elemento selecionado
+                        state.dragStartMouse = {
+                            x: (e.clientX - rect.left) / state.scale - state.workspacePosition.x,
+                            y: (e.clientY - rect.top) / state.scale - state.workspacePosition.y,
                         };
+                        state.selectedElements.forEach(el => {
+                            el.dragStartPosition = { x: el.position.x, y: el.position.y };
+                        });
 
                         renderDiagram();
                     }
@@ -1964,12 +1994,19 @@
                 // Dragging element
                 if (state.dragging && state.selectedElements.length > 0) {
                     const rect = diagramArea.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / state.scale - state.dragOffset.x;
-                    const y = (e.clientY - rect.top) / state.scale - state.dragOffset.y;
+                    const currentMouse = {
+                        x: (e.clientX - rect.left) / state.scale - state.workspacePosition.x,
+                        y: (e.clientY - rect.top) / state.scale - state.workspacePosition.y,
+                    };
 
+                    // Calcula o deslocamento do mouse desde o início do arraste
+                    const dx = currentMouse.x - state.dragStartMouse.x;
+                    const dy = currentMouse.y - state.dragStartMouse.y;
+
+                    // Aplica o mesmo deslocamento a todos os elementos selecionados
                     state.selectedElements.forEach(element => {
-                        element.position.x = x;
-                        element.position.y = y;
+                        element.position.x = element.dragStartPosition.x + dx;
+                        element.position.y = element.dragStartPosition.y + dy;
                     });
 
                     renderDiagram();
@@ -2038,6 +2075,11 @@
             function handleDiagramMouseUp(e) {
                 if (state.dragging) {
                     state.dragging = false;
+                    // Limpa as propriedades temporárias usadas para o arraste
+                    state.selectedElements.forEach(el => {
+                        delete el.dragStartPosition;
+                    });
+                    delete state.dragStartMouse;
                     saveState();
                 }
 
@@ -2245,44 +2287,54 @@
 
                 if (element.type === 'actor' || element.type === 'use-case') {
                     formHTML = `
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
-                            <input type="text" id="editElementName" value="${element.text}" 
-                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cor</label>
-                            <div class="flex space-x-2">
-                                <div class="flex flex-col items-center">
-                                    <button data-color="7dd3fc" class="color-preview bg-[#7dd3fc] ${element.color === '#7dd3fc' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                        }"></button>
-                                    <span class="text-xs mt-1 dark:text-gray-300">Azul</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <button data-color="86efac" class="color-preview bg-[#86efac] ${element.color === '#86efac' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                        }"></button>
-                                    <span class="text-xs mt-1 dark:text-gray-300">Verde</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <button data-color="fde68a" class="color-preview bg-[#fde68a] ${element.color === '#fde68a' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                        }"></button>
-                                    <span class="text-xs mt-1 dark:text-gray-300">Amarelo</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <button data-color="fecaca" class="color-preview bg-[#fecaca] ${element.color === '#fecaca' ? 'ring-2 ring-offset-2 ring-blue-500' : ''
-                        }"></button>
-                                    <span class="text-xs mt-1 dark:text-gray-300">Vermelho</span>
-                                </div>
-                            </div>
-                            <input type="hidden" id="editElementColor" value="${element.color.replace('#', '')}">
-                        </div>
-                        <div class="pt-4">
-                            <button id="saveElementPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm">
-                                Salvar alterações
-                            </button>
-                        </div>
-                    `;
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                <input type="text" id="editElementName" value="${element.text}"
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cor</label>
+                <div class="flex space-x-2">
+                    <div class="flex flex-col items-center">
+                        <button data-color="7dd3fc" class="color-preview bg-[#7dd3fc] ${element.color === '#7dd3fc' ? 'ring-2 ring-offset-2 ring-blue-500' : ''}"></button>
+                        <span class="text-xs mt-1 dark:text-gray-300">Azul</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button data-color="86efac" class="color-preview bg-[#86efac] ${element.color === '#86efac' ? 'ring-2 ring-offset-2 ring-blue-500' : ''}"></button>
+                        <span class="text-xs mt-1 dark:text-gray-300">Verde</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button data-color="fde68a" class="color-preview bg-[#fde68a] ${element.color === '#fde68a' ? 'ring-2 ring-offset-2 ring-blue-500' : ''}"></button>
+                        <span class="text-xs mt-1 dark:text-gray-300">Amarelo</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <button data-color="fecaca" class="color-preview bg-[#fecaca] ${element.color === '#fecaca' ? 'ring-2 ring-offset-2 ring-blue-500' : ''}"></button>
+                        <span class="text-xs mt-1 dark:text-gray-300">Vermelho</span>
+                    </div>
+                </div>
+                <input type="hidden" id="editElementColor" value="${element.color.replace('#', '')}">
+            </div>
+            <div class="pt-4">
+                <button id="saveElementPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm">
+                    Salvar alterações
+                </button>
+            </div>
+        `;
+                } else if (element.type === 'label') {
+                    formHTML = `
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título do Diagrama</label>
+                <input type="text" id="editElementText" value="${element.text}"
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-200">
+            </div>
+            <div class="pt-4">
+                <button id="saveElementPropsBtn" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm">
+                    Salvar alterações
+                </button>
+            </div>
+        `;
                 }
+
 
                 elementForm.innerHTML = formHTML;
 
@@ -2303,7 +2355,9 @@
                     });
                 });
 
-                document.getElementById('saveElementPropsBtn').addEventListener('click', saveElementChanges);
+                if (document.getElementById('saveElementPropsBtn')) {
+                    document.getElementById('saveElementPropsBtn').addEventListener('click', saveElementChanges);
+                }
             }
 
             function hideElementEditor() {
@@ -2315,14 +2369,23 @@
             function saveElementChanges() {
                 if (state.selectedElements.length === 0) return;
 
-                const name = document.getElementById('editElementName')?.value.trim();
-                const color = '#' + (document.getElementById('editElementColor')?.value || '86efac');
+                const selected = state.selectedElements[0];
 
-                if (name) {
-                    state.selectedElements[0].text = name;
+                if (selected.type === 'actor' || selected.type === 'use-case') {
+                    const name = document.getElementById('editElementName')?.value.trim();
+                    const color = '#' + (document.getElementById('editElementColor')?.value || '86efac');
+
+                    if (name) {
+                        selected.text = name;
+                    }
+                    selected.color = color;
+
+                } else if (selected.type === 'label') {
+                    const text = document.getElementById('editElementText')?.value.trim();
+                    if (text) {
+                        selected.text = text;
+                    }
                 }
-
-                state.selectedElements[0].color = color;
 
                 renderDiagram();
                 saveState();
