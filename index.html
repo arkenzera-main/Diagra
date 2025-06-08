@@ -1915,9 +1915,10 @@
                     renderDiagram();
 
                     // Start selection box
+                    const diagramRect = diagramArea.getBoundingClientRect();
                     state.selectionStart = {
-                        x: e.clientX,
-                        y: e.clientY
+                        x: (e.clientX - diagramRect.left) / state.scale - state.workspacePosition.x,
+                        y: (e.clientY - diagramRect.top) / state.scale - state.workspacePosition.y
                     };
                 }
 
@@ -1976,15 +1977,16 @@
 
                 // Drawing selection box
                 if (state.selectionStart) {
+                    const diagramRect = diagramArea.getBoundingClientRect();
                     const startX = state.selectionStart.x;
                     const startY = state.selectionStart.y;
-                    const currentX = e.clientX;
-                    const currentY = e.clientY;
+                    const currentX = (e.clientX - diagramRect.left) / state.scale - state.workspacePosition.x;
+                    const currentY = (e.clientY - diagramRect.top) / state.scale - state.workspacePosition.y;
 
-                    selectionBox.style.left = Math.min(startX, currentX) + 'px';
-                    selectionBox.style.top = Math.min(startY, currentY) + 'px';
-                    selectionBox.style.width = Math.abs(currentX - startX) + 'px';
-                    selectionBox.style.height = Math.abs(currentY - startY) + 'px';
+                    selectionBox.style.left = `${Math.min(startX, currentX)}px`;
+                    selectionBox.style.top = `${Math.min(startY, currentY)}px`;
+                    selectionBox.style.width = `${Math.abs(currentX - startX)}px`;
+                    selectionBox.style.height = `${Math.abs(currentY - startY)}px`;
                     selectionBox.classList.remove('hidden');
                 }
 
@@ -2049,29 +2051,31 @@
                     selectionBox.classList.add('hidden');
 
                     const diagramRect = diagramArea.getBoundingClientRect();
-                    const startX = state.selectionStart.x;
-                    const startY = state.selectionStart.y;
-                    const endX = e.clientX;
-                    const endY = e.clientY;
+                    const localStartX = state.selectionStart.x;
+                    const localStartY = state.selectionStart.y;
+                    const localEndX = (e.clientX - diagramRect.left) / state.scale - state.workspacePosition.x;
+                    const localEndY = (e.clientY - diagramRect.top) / state.scale - state.workspacePosition.y;
 
                     const selectionRect = {
-                        left: Math.min(startX, endX),
-                        top: Math.min(startY, endY),
-                        right: Math.max(startX, endX),
-                        bottom: Math.max(startY, endY)
+                        left: Math.min(localStartX, localEndX),
+                        top: Math.min(localStartY, localEndY),
+                        right: Math.max(localStartX, localEndX),
+                        bottom: Math.max(localStartY, localEndY)
                     };
 
                     // Find elements within selection
                     state.selectedElements = state.elements.filter(element => {
-                        const el = diagramArea.querySelector(`[data-id="${element.id}"]`);
-                        if (!el) return false;
-
-                        const rect = el.getBoundingClientRect();
+                        const elementRect = {
+                            left: element.position.x,
+                            top: element.position.y,
+                            right: element.position.x + element.width,
+                            bottom: element.position.y + element.height
+                        };
                         return (
-                            rect.left >= selectionRect.left &&
-                            rect.top >= selectionRect.top &&
-                            rect.right <= selectionRect.right &&
-                            rect.bottom <= selectionRect.bottom
+                            elementRect.left >= selectionRect.left &&
+                            elementRect.top >= selectionRect.top &&
+                            elementRect.right <= selectionRect.right &&
+                            elementRect.bottom <= selectionRect.bottom
                         );
                     });
 
